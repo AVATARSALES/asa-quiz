@@ -1132,11 +1132,11 @@ function buildStage3(){
 async function submitToBackend(attempt){
   if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')) return;
   try{
-    await fetch(CONFIG.apiUrl, {
+    fetch(CONFIG.apiUrl, {
       method:'POST',
+      mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({
-        action: 'write',
         key: CONFIG.writeKey,
         groupe: learnerGroupe,
         date: attempt.date,
@@ -1293,15 +1293,41 @@ function getLocalHistoryForLearner(first, last){
   return history.filter(a => (a.firstName||'').trim().toLowerCase()===f && (a.lastName||'').trim().toLowerCase()===l);
 }
 
+/* Fonction JSONP générique — contourne CORS via balise <script> */
+function jsonpCall(params){
+  return new Promise(function(resolve, reject){
+    var cbName = '_asaCb_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    var timeout = setTimeout(function(){
+      cleanup();
+      reject(new Error('Délai dépassé'));
+    }, 15000);
+
+    window[cbName] = function(data){
+      cleanup();
+      resolve(data);
+    };
+
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    var qs = 'callback=' + cbName;
+    for(var k in params){
+      if(params.hasOwnProperty(k)) qs += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+    var script = document.createElement('script');
+    script.src = CONFIG.apiUrl + '?' + qs;
+    script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
+    document.body.appendChild(script);
+  });
+}
+
 async function fetchMineFromBackend(first, last){
   if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')) return [];
   try{
-    const res = await fetch(CONFIG.apiUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'myhistory', firstName: first, lastName: last })
-    });
-    const data = await res.json();
+    var data = await jsonpCall({ action:'myhistory', firstName:first, lastName:last });
     return data.ok ? data.results : [];
   }catch(err){ return []; }
 }
@@ -1390,12 +1416,7 @@ document.getElementById('trainerBackBtn').addEventListener('click', ()=> showScr
 document.getElementById('trainerBackBtn2').addEventListener('click', ()=> showScreen('screen-intro'));
 
 async function fetchLeaderboard(key){
-  const res = await fetch(CONFIG.apiUrl, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action:'leaderboard', formateurKey: key })
-  });
-  const data = await res.json();
+  var data = await jsonpCall({ action:'leaderboard', formateurKey: key });
   if(!data.ok) throw new Error(data.error || 'Accès refusé');
   return data.results;
 }
@@ -1453,36 +1474,21 @@ document.getElementById('trainerLoginBtn').addEventListener('click', async ()=>{
   errEl.textContent = '';
   if(!key){ errEl.textContent = 'Merci de saisir le mot de passe.'; return; }
   if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')){
-    errEl.textContent = "Aucun classement centralisé n'est encore configuré (voir apps-script-eisenhower-backend.gs).";
+    errEl.textContent = "Aucun classement centralisé n'est encore configuré.";
     return;
   }
   errEl.textContent = 'Connexion en cours…';
   try{
-    const res = await fetch(CONFIG.apiUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'leaderboard', formateurKey: key })
-    });
-    errEl.textContent = 'Réponse reçue (status ' + res.status + '), lecture…';
-    const text = await res.text();
-    errEl.textContent = 'Données brutes reçues (' + text.length + ' car.), analyse…';
-    let data;
-    try{ data = JSON.parse(text); }catch(parseErr){
-      errEl.textContent = 'Erreur : réponse non-JSON. Début : ' + text.substring(0,200);
-      return;
-    }
-    if(!data.ok){
-      errEl.textContent = 'Refusé par le serveur : ' + (data.error || 'raison inconnue');
-      return;
-    }
+    const results = await fetchLeaderboard(key);
     currentTrainerKey = key;
-    allLeaderboardData = data.results;
-    buildGroupeFilter(data.results);
-    renderLeaderboard(data.results, '');
+    allLeaderboardData = results;
+    buildGroupeFilter(results);
+    renderLeaderboard(results, '');
+    errEl.textContent = '';
     document.getElementById('trainerGate').style.display = 'none';
     document.getElementById('trainerResultsView').style.display = 'block';
   }catch(err){
-    errEl.textContent = 'Erreur réseau : ' + err.message;
+    errEl.textContent = err.message === 'Accès refusé' ? 'Mot de passe incorrect.' : 'Connexion impossible : ' + err.message;
   }
 });
 
