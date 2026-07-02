@@ -770,19 +770,9 @@ footer.credit{
       <div class="stage-title">Classement centralisé</div>
     </div>
 
-    <div id="trainerGate">
-      <div class="identity-card" style="border-color:rgba(255,107,0,0.25);max-width:420px;">
-        <div class="label" style="color:var(--orange);">Accès protégé</div>
-        <input type="password" id="trainerPassInput" class="trainer-pass-input" placeholder="Mot de passe formateur">
-        <div class="trainer-error" id="trainerError"></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="trainerLoginBtn">Voir le classement</button>
-        <button class="btn btn-ghost" id="trainerBackBtn">Retour</button>
-      </div>
-    </div>
+    <div class="trainer-error" id="trainerError" style="margin-bottom:12px;"></div>
 
-    <div id="trainerResultsView" style="display:none;">
+    <div id="trainerResultsView">
       <div class="btn-row" style="justify-content:flex-start;margin-bottom:12px;">
         <button class="btn btn-ghost" id="trainerRefreshBtn">Actualiser</button>
         <button class="btn btn-ghost" id="trainerExportBtn">Exporter CSV</button>
@@ -888,9 +878,12 @@ const TOTAL_ITEMS = TASKS.length + BLANKS.length + MATCHES.length; // 14
    Tant que apiUrl n'est pas renseignée, le quiz fonctionne normalement
    en local (export CSV) sans tenter de connexion réseau. */
 const CONFIG = {
-  apiUrl: 'https://script.google.com/macros/s/AKfycbzAhrgjtUauGUqZowSomPSteKnyab-pzjFXInJuLFaX2I3byUvP_v2cqNH2N40kWroApQ/exec',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxaosPLLBd1Oh9i8lED37P9QWMfD8RTiq_mKTCRdbKkmUGc2_F_zbLJ1iB7ZFnEwzVbPw/exec',
   writeKey: 'asa-quiz-2026'
 };
+
+/* Lecture du groupe depuis l'URL (?groupe=BTS NDRC 1A) */
+const URL_GROUPE = new URLSearchParams(window.location.search).get('groupe') || '';
 
 let score = 0;
 let score1 = 0, score2 = 0, score3 = 0, wrongAttempts3 = 0;
@@ -1132,11 +1125,11 @@ function buildStage3(){
 async function submitToBackend(attempt){
   if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')) return;
   try{
-    await fetch(CONFIG.apiUrl, {
+    fetch(CONFIG.apiUrl, {
       method:'POST',
+      mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({
-        action: 'write',
         key: CONFIG.writeKey,
         groupe: learnerGroupe,
         date: attempt.date,
@@ -1257,6 +1250,14 @@ const firstInput = document.getElementById('learnerFirst');
 const lastInput = document.getElementById('learnerLast');
 const groupeInput = document.getElementById('learnerGroupe');
 
+/* Pré-remplir le groupe depuis l'URL si présent */
+if(URL_GROUPE){
+  groupeInput.value = URL_GROUPE;
+  groupeInput.readOnly = true;
+  groupeInput.style.opacity = '0.7';
+  groupeInput.title = 'Groupe défini par le lien du formateur';
+}
+
 function checkIdentityReady(){
   document.getElementById('startBtn').disabled = !(firstInput.value.trim() && lastInput.value.trim() && groupeInput.value.trim());
 }
@@ -1293,15 +1294,41 @@ function getLocalHistoryForLearner(first, last){
   return history.filter(a => (a.firstName||'').trim().toLowerCase()===f && (a.lastName||'').trim().toLowerCase()===l);
 }
 
+/* Fonction JSONP générique — contourne CORS via balise <script> */
+function jsonpCall(params){
+  return new Promise(function(resolve, reject){
+    var cbName = '_asaCb_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    var timeout = setTimeout(function(){
+      cleanup();
+      reject(new Error('Délai dépassé'));
+    }, 15000);
+
+    window[cbName] = function(data){
+      cleanup();
+      resolve(data);
+    };
+
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    var qs = 'callback=' + cbName;
+    for(var k in params){
+      if(params.hasOwnProperty(k)) qs += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+    var script = document.createElement('script');
+    script.src = CONFIG.apiUrl + '?' + qs;
+    script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
+    document.body.appendChild(script);
+  });
+}
+
 async function fetchMineFromBackend(first, last){
   if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')) return [];
   try{
-    const res = await fetch(CONFIG.apiUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'myhistory', firstName: first, lastName: last })
-    });
-    const data = await res.json();
+    var data = await jsonpCall({ action:'myhistory', firstName:first, lastName:last });
     return data.ok ? data.results : [];
   }catch(err){ return []; }
 }
@@ -1375,28 +1402,43 @@ document.getElementById('myHistoryFromResultsBtn').addEventListener('click', ()=
 document.getElementById('myHistoryBackBtn').addEventListener('click', ()=> showScreen('screen-intro'));
 
 /* ---------- Espace formateur : classement centralisé ---------- */
-let currentTrainerKey = '';
 let lastLeaderboardData = [];
 
-document.getElementById('trainerLink').addEventListener('click', ()=>{
-  document.getElementById('trainerGate').style.display = 'block';
-  document.getElementById('trainerResultsView').style.display = 'none';
-  document.getElementById('trainerError').textContent = '';
-  document.getElementById('trainerPassInput').value = '';
+document.getElementById('trainerLink').addEventListener('click', async ()=>{
   document.getElementById('progressTrack').classList.add('hidden');
+  document.getElementById('trainerError').textContent = 'Chargement du classement…';
+  document.getElementById('leaderboardTable').innerHTML = '';
   showScreen('screen-trainer');
+  try{
+    const results = await fetchLeaderboard();
+    allLeaderboardData = results;
+    buildGroupeFilter(results);
+    /* Pré-sélectionner le groupe de l'URL dans le filtre */
+    if(URL_GROUPE){
+      const sel = document.getElementById('groupeSelect');
+      if(sel){
+        for(let i=0;i<sel.options.length;i++){
+          if(sel.options[i].value.toLowerCase()===URL_GROUPE.toLowerCase()){
+            sel.value = sel.options[i].value;
+            break;
+          }
+        }
+      }
+    }
+    const activeFilter = URL_GROUPE || '';
+    renderLeaderboard(results, activeFilter);
+    document.getElementById('trainerError').textContent = '';
+  }catch(err){
+    document.getElementById('trainerError').textContent = 'Connexion impossible : ' + err.message;
+  }
 });
-document.getElementById('trainerBackBtn').addEventListener('click', ()=> showScreen('screen-intro'));
 document.getElementById('trainerBackBtn2').addEventListener('click', ()=> showScreen('screen-intro'));
 
-async function fetchLeaderboard(key){
-  const res = await fetch(CONFIG.apiUrl, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({ action:'leaderboard', formateurKey: key })
-  });
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || 'Accès refusé');
+async function fetchLeaderboard(){
+  var params = { action:'leaderboard' };
+  if(URL_GROUPE) params.groupe = URL_GROUPE;
+  var data = await jsonpCall(params);
+  if(!data.ok) throw new Error(data.error || 'Erreur serveur');
   return data.results;
 }
 
@@ -1447,49 +1489,9 @@ function renderLeaderboard(results, groupeFilter){
   `).join('');
 }
 
-document.getElementById('trainerLoginBtn').addEventListener('click', async ()=>{
-  const key = document.getElementById('trainerPassInput').value.trim();
-  const errEl = document.getElementById('trainerError');
-  errEl.textContent = '';
-  if(!key){ errEl.textContent = 'Merci de saisir le mot de passe.'; return; }
-  if(!CONFIG.apiUrl || CONFIG.apiUrl.includes('COLLEZ_ICI')){
-    errEl.textContent = "Aucun classement centralisé n'est encore configuré (voir apps-script-eisenhower-backend.gs).";
-    return;
-  }
-  errEl.textContent = 'Connexion en cours…';
-  try{
-    const res = await fetch(CONFIG.apiUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'leaderboard', formateurKey: key })
-    });
-    errEl.textContent = 'Réponse reçue (status ' + res.status + '), lecture…';
-    const text = await res.text();
-    errEl.textContent = 'Données brutes reçues (' + text.length + ' car.), analyse…';
-    let data;
-    try{ data = JSON.parse(text); }catch(parseErr){
-      errEl.textContent = 'Erreur : réponse non-JSON. Début : ' + text.substring(0,200);
-      return;
-    }
-    if(!data.ok){
-      errEl.textContent = 'Refusé par le serveur : ' + (data.error || 'raison inconnue');
-      return;
-    }
-    currentTrainerKey = key;
-    allLeaderboardData = data.results;
-    buildGroupeFilter(data.results);
-    renderLeaderboard(data.results, '');
-    document.getElementById('trainerGate').style.display = 'none';
-    document.getElementById('trainerResultsView').style.display = 'block';
-  }catch(err){
-    errEl.textContent = 'Erreur réseau : ' + err.message;
-  }
-});
-
 document.getElementById('trainerRefreshBtn').addEventListener('click', async ()=>{
-  if(!currentTrainerKey) return;
   try{
-    const results = await fetchLeaderboard(currentTrainerKey);
+    const results = await fetchLeaderboard();
     allLeaderboardData = results;
     buildGroupeFilter(results);
     const sel = document.getElementById('groupeSelect');
