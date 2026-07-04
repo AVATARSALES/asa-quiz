@@ -1409,7 +1409,7 @@ function readPublishedSheet(){
 
     var script = document.createElement('script');
     script.src = 'https://docs.google.com/spreadsheets/d/' + CONFIG.sheetId +
-      '/gviz/tq?tqx=responseHandler:' + cbName + '&gid=0';
+      '/gviz/tq?tqx=responseHandler:' + cbName + '&sheet=Resultats';
     script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
     document.body.appendChild(script);
   });
