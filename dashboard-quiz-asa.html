@@ -1,1 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord Quiz — ASA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B35;
+  --navy-deep:#081226;
+  --navy-light:#16284f;
+  --orange:#FF6B00;
+  --orange-glow:#ff8c3d;
+  --blue:#00AAFF;
+  --white:#F5F7FA;
+  --green:#2ECC71;
+  --red:#FF5C5C;
+  --muted:#8CA0C4;
+  --font-d:'Barlow Condensed',sans-serif;
+  --font-b:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-b);
+  background:var(--navy-deep);
+  color:var(--white);
+  min-height:100vh;
+  padding:24px 20px 60px;
+}
+.wrap{max-width:1100px;margin:0 auto;}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:8px;
+}
+.brand{
+  font-family:var(--font-d);
+  font-weight:700;
+  letter-spacing:0.08em;
+  font-size:14px;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.brand span{color:var(--orange);}
+h1{
+  font-family:var(--font-d);
+  font-weight:800;
+  font-size:clamp(30px,5vw,44px);
+  letter-spacing:-0.01em;
+  background:linear-gradient(120deg,var(--white) 40%,var(--orange));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  margin-bottom:20px;
+}
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+  margin-bottom:24px;
+}
+select, .btn{
+  font-family:var(--font-b);
+  font-size:14px;
+  padding:10px 14px;
+  border-radius:9px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:var(--navy-light);
+  color:var(--white);
+  cursor:pointer;
+}
+select:focus{outline:none;border-color:var(--blue);}
+.btn{
+  font-family:var(--font-d);
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  transition:border-color .15s, color .15s;
+}
+.btn:hover{border-color:var(--orange);color:var(--orange);}
+.btn.primary{background:var(--orange);color:var(--navy-deep);border-color:var(--orange);}
+.btn.primary:hover{color:var(--navy-deep);opacity:0.9;}
+.status{
+  font-size:13px;
+  color:var(--muted);
+  margin-left:auto;
+}
+.status.error{color:var(--red);}
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-bottom:26px;
+}
+.kpi{
+  background:var(--navy-light);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:18px 20px;
+}
+.kpi .label{
+  font-family:var(--font-d);
+  font-weight:600;
+  font-size:12.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.kpi .value{
+  font-family:var(--font-d);
+  font-weight:800;
+  font-size:34px;
+  color:var(--white);
+  line-height:1;
+}
+.kpi .value.orange{color:var(--orange);}
+.kpi .value.blue{color:var(--blue);}
+.kpi .value.green{color:var(--green);}
+.section-title{
+  font-family:var(--font-d);
+  font-weight:700;
+  font-size:20px;
+  margin:26px 0 14px;
+  color:var(--white);
+}
+.quiz-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:14px;
+  margin-bottom:10px;
+}
+.quiz-card{
+  background:var(--navy-light);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:16px 18px;
+}
+.quiz-card .qname{
+  font-family:var(--font-d);
+  font-weight:700;
+  font-size:17px;
+  color:var(--blue);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:10px;
+}
+.quiz-card .qrow{
+  display:flex;
+  justify-content:space-between;
+  font-size:13.5px;
+  padding:4px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.quiz-card .qrow:last-child{border-bottom:none;}
+.quiz-card .qrow .k{color:var(--muted);}
+.quiz-card .qrow .v{font-family:var(--font-d);font-weight:700;}
+.bar-track{
+  height:8px;
+  background:rgba(255,255,255,0.08);
+  border-radius:5px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--orange),var(--orange-glow));
+  border-radius:5px;
+  transition:width .6s ease;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--navy-light);
+  border-radius:14px;
+  overflow:hidden;
+  font-size:13.5px;
+}
+thead th{
+  font-family:var(--font-d);
+  font-weight:700;
+  font-size:12.5px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-align:left;
+  padding:12px 14px;
+  background:rgba(0,0,0,0.25);
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+thead th:hover{color:var(--blue);}
+tbody td{
+  padding:11px 14px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+tbody tr:hover{background:rgba(255,255,255,0.03);}
+.rank{
+  font-family:var(--font-d);
+  font-weight:800;
+  color:var(--muted);
+}
+tbody tr:nth-child(1) .rank{color:var(--orange);}
+tbody tr:nth-child(2) .rank{color:#c9d4e6;}
+tbody tr:nth-child(3) .rank{color:#d99a5c;}
+.score-cell{
+  font-family:var(--font-d);
+  font-weight:700;
+  color:var(--orange);
+  white-space:nowrap;
+}
+.badge-ok{color:var(--green);font-size:15px;}
+.badge-ko{color:var(--muted);font-size:15px;}
+.empty{
+  padding:40px;
+  text-align:center;
+  color:var(--muted);
+  background:var(--navy-light);
+  border-radius:14px;
+}
+.config-warning{
+  background:rgba(255,107,0,0.1);
+  border:1px solid rgba(255,107,0,0.4);
+  border-radius:12px;
+  padding:16px 20px;
+  margin-bottom:24px;
+  font-size:14px;
+  line-height:1.6;
+}
+.config-warning strong{color:var(--orange);}
+.config-warning code{
+  background:rgba(0,0,0,0.3);
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:12.5px;
+}
+footer{
+  text-align:center;
+  color:rgba(140,160,196,0.5);
+  font-size:11.5px;
+  margin-top:40px;
+  letter-spacing:.04em;
+}
+@media (max-width:640px){
+  thead th:nth-child(6), tbody td:nth-child(6){display:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">Avatar Sales <span>Academy</span></div>
+  </div>
+  <h1>Tableau de bord Quiz</h1>
+
+  <div class="config-warning" id="configWarning" style="display:none;">
+    <strong>Configuration requise :</strong> ce tableau de bord n'est pas encore connecté au Google Sheet central.
+    Ouvrez ce fichier et collez l'ID de votre Sheet dans <code>CONFIG.sheetId</code>
+    (l'ID se trouve dans l'URL : docs.google.com/spreadsheets/d/<strong>VOTRE_ID</strong>/edit).
+    Le Sheet doit être <strong>publié sur le Web</strong> (Fichier &gt; Partage &gt; Publier sur le Web, onglet Résultats).
+  </div>
+
+  <div class="toolbar">
+    <select id="filterQuiz">
+      <option value="">Tous les quiz</option>
+    </select>
+    <select id="filterGroupe">
+      <option value="">Tous les groupes</option>
+    </select>
+    <select id="filterPeriode">
+      <option value="">Toute la période</option>
+      <option value="7">7 derniers jours</option>
+      <option value="30">30 derniers jours</option>
+      <option value="90">90 derniers jours</option>
+    </select>
+    <button class="btn" id="refreshBtn">Actualiser</button>
+    <button class="btn primary" id="exportBtn">Exporter CSV</button>
+    <span class="status" id="status">Chargement…</span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="section-title">Performance par quiz</div>
+  <div class="quiz-cards" id="quizCards"></div>
+
+  <div class="section-title">Résultats détaillés <span style="color:var(--muted);font-size:13px;font-weight:400;">(cliquez sur un en-tête pour trier)</span></div>
+  <div id="tableWrap"></div>
+
+  <footer>Avatar Sales Academy — Tableau de bord formateur · Données : Google Sheet central</footer>
+</div>
+
+<script>
+/* ================== CONFIGURATION ==================
+   Collez ici l'ID de votre Google Sheet CENTRAL (celui du backend
+   apps-script-central-backend.gs), préalablement publié sur le Web.
+   L'ID est dans l'URL : docs.google.com/spreadsheets/d/XXXXX/edit */
+const CONFIG = {
+  sheetId: '1trEiBtPFs9E1DSOknM1NO2JUvNCjOvMuQovS_6tYG4I',
+  badgeThreshold: 0.7   /* seuil de réussite du badge (70%) */
+};
+
+/* Noms d'affichage des quiz (clé = valeur envoyée par chaque quiz) */
+const QUIZ_LABELS = {
+  'eisenhower': "Matrice d'Eisenhower",
+  'marketing-b2b': 'Marketing Digital B2B'
+};
+
+let allData = [];
+let currentSort = { key:'date', dir:-1 };
+
+/* ---------- Lecture du Sheet publié (gviz JSONP) ---------- */
+function readPublishedSheet(){
+  return new Promise(function(resolve, reject){
+    if(!CONFIG.sheetId || CONFIG.sheetId.includes('COLLEZ_ICI')){
+      reject(new Error('non-configuré'));
+      return;
+    }
+    var cbName = '_dashCb_' + Date.now();
+    var timeout = setTimeout(function(){ cleanup(); reject(new Error('Délai dépassé')); }, 15000);
+    window[cbName] = function(response){
+      cleanup();
+      if(response.status !== 'ok'){ reject(new Error('Erreur lecture Sheet')); return; }
+      var rows = response.table.rows || [];
+      var results = [];
+      for(var i=0; i<rows.length; i++){
+        var c = rows[i].c;
+        if(!c) continue;
+        var val = function(idx){ return c[idx] ? (c[idx].v != null ? c[idx].v : '') : ''; };
+        /* Colonnes : Date | Quiz | Groupe | Prénom | Nom | Score | Total | E1 | Sur | E2 | Sur | E3 | Sur | Détail */
+        var dateRaw = val(0);
+        var d = parseGvizDate(dateRaw);
+        results.push({
+          date: d,
+          quiz: String(val(1)).trim(),
+          groupe: String(val(2)).trim(),
+          firstName: val(3), lastName: val(4),
+          score: Number(val(5)) || 0, total: Number(val(6)) || 0,
+          s1: val(7), t1: val(8), s2: val(9), t2: val(10), s3: val(11), t3: val(12)
+        });
+      }
+      resolve(results.filter(function(r){ return r.firstName || r.lastName; }));
+    };
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+    var script = document.createElement('script');
+    script.src = 'https://docs.google.com/spreadsheets/d/' + CONFIG.sheetId +
+      '/gviz/tq?tqx=responseHandler:' + cbName + '&sheet=R%C3%A9sultats';
+    script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
+    document.body.appendChild(script);
+  });
+}
+
+/* gviz renvoie les dates au format "Date(2026,6,4,11,30,0)" */
+function parseGvizDate(v){
+  if(v instanceof Date) return v;
+  if(typeof v === 'string' && v.indexOf('Date(') === 0){
+    var parts = v.slice(5,-1).split(',').map(Number);
+    return new Date(parts[0], parts[1]||0, parts[2]||1, parts[3]||0, parts[4]||0, parts[5]||0);
+  }
+  var d = new Date(v);
+  return isNaN(d) ? new Date(0) : d;
+}
+
+function quizLabel(key){
+  return QUIZ_LABELS[key] || key || '—';
+}
+
+/* ---------- Filtres ---------- */
+function getFiltered(){
+  var fq = document.getElementById('filterQuiz').value;
+  var fg = document.getElementById('filterGroupe').value;
+  var fp = document.getElementById('filterPeriode').value;
+  var minDate = fp ? new Date(Date.now() - Number(fp)*24*3600*1000) : null;
+
+  return allData.filter(function(r){
+    if(fq && r.quiz !== fq) return false;
+    if(fg && r.groupe !== fg) return false;
+    if(minDate && r.date < minDate) return false;
+    return true;
+  });
+}
+
+function buildFilterOptions(){
+  var quizzes = Array.from(new Set(allData.map(function(r){ return r.quiz; }).filter(Boolean))).sort();
+  var groupes = Array.from(new Set(allData.map(function(r){ return r.groupe; }).filter(Boolean))).sort();
+
+  var selQ = document.getElementById('filterQuiz');
+  var keepQ = selQ.value;
+  selQ.innerHTML = '<option value="">Tous les quiz</option>' +
+    quizzes.map(function(q){ return '<option value="' + q + '">' + quizLabel(q) + '</option>'; }).join('');
+  selQ.value = keepQ;
+
+  var selG = document.getElementById('filterGroupe');
+  var keepG = selG.value;
+  selG.innerHTML = '<option value="">Tous les groupes</option>' +
+    groupes.map(function(g){ return '<option value="' + g + '">' + g + '</option>'; }).join('');
+  selG.value = keepG;
+}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(data){
+  var el = document.getElementById('kpis');
+  if(!data.length){ el.innerHTML = ''; return; }
+
+  var participants = new Set(data.map(function(r){ return (r.firstName+'|'+r.lastName+'|'+r.groupe).toLowerCase(); })).size;
+  var passages = data.length;
+  var avgPct = data.reduce(function(s,r){ return s + (r.total ? r.score/r.total : 0); }, 0) / data.length * 100;
+  var badges = data.filter(function(r){ return r.total && (r.score/r.total) >= CONFIG.badgeThreshold; }).length;
+  var badgeRate = badges / data.length * 100;
+
+  el.innerHTML =
+    '<div class="kpi"><div class="label">Passages</div><div class="value blue">' + passages + '</div></div>' +
+    '<div class="kpi"><div class="label">Apprenants uniques</div><div class="value">' + participants + '</div></div>' +
+    '<div class="kpi"><div class="label">Score moyen</div><div class="value orange">' + avgPct.toFixed(0) + '%</div></div>' +
+    '<div class="kpi"><div class="label">Taux de badge (≥70%)</div><div class="value green">' + badgeRate.toFixed(0) + '%</div></div>';
+}
+
+/* ---------- Cartes par quiz ---------- */
+function renderQuizCards(data){
+  var el = document.getElementById('quizCards');
+  var byQuiz = {};
+  data.forEach(function(r){
+    if(!byQuiz[r.quiz]) byQuiz[r.quiz] = [];
+    byQuiz[r.quiz].push(r);
+  });
+  var keys = Object.keys(byQuiz).sort();
+  if(!keys.length){ el.innerHTML = '<div class="empty">Aucune donnée pour ces filtres.</div>'; return; }
+
+  el.innerHTML = keys.map(function(q){
+    var rows = byQuiz[q];
+    var avg = rows.reduce(function(s,r){ return s + (r.total ? r.score/r.total : 0); }, 0) / rows.length * 100;
+    var badges = rows.filter(function(r){ return r.total && (r.score/r.total) >= CONFIG.badgeThreshold; }).length;
+    var best = rows.reduce(function(m,r){ var p = r.total ? r.score/r.total : 0; return p > m ? p : m; }, 0) * 100;
+    return '<div class="quiz-card">' +
+      '<div class="qname">' + quizLabel(q) + '</div>' +
+      '<div class="qrow"><span class="k">Passages</span><span class="v">' + rows.length + '</span></div>' +
+      '<div class="qrow"><span class="k">Score moyen</span><span class="v">' + avg.toFixed(0) + '%</span></div>' +
+      '<div class="qrow"><span class="k">Meilleur score</span><span class="v">' + best.toFixed(0) + '%</span></div>' +
+      '<div class="qrow"><span class="k">Badges obtenus</span><span class="v">' + badges + '/' + rows.length + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + avg.toFixed(0) + '%"></div></div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ---------- Tableau détaillé ---------- */
+function renderTable(data){
+  var wrap = document.getElementById('tableWrap');
+  if(!data.length){ wrap.innerHTML = '<div class="empty">Aucun résultat pour ces filtres.</div>'; return; }
+
+  var sorted = data.slice().sort(function(a,b){
+    var k = currentSort.key, d = currentSort.dir;
+    var va, vb;
+    if(k === 'pct'){ va = a.total ? a.score/a.total : 0; vb = b.total ? b.score/b.total : 0; }
+    else if(k === 'nom'){ va = (a.lastName+' '+a.firstName).toLowerCase(); vb = (b.lastName+' '+b.firstName).toLowerCase(); }
+    else { va = a[k]; vb = b[k]; }
+    if(va < vb) return -1*d;
+    if(va > vb) return 1*d;
+    return 0;
+  });
+
+  var html = '<table><thead><tr>' +
+    '<th>#</th>' +
+    '<th data-k="nom">Apprenant</th>' +
+    '<th data-k="groupe">Groupe</th>' +
+    '<th data-k="quiz">Quiz</th>' +
+    '<th data-k="pct">Score</th>' +
+    '<th data-k="date">Date</th>' +
+    '<th>Badge</th>' +
+    '</tr></thead><tbody>';
+
+  sorted.forEach(function(r, i){
+    var pct = r.total ? (r.score/r.total*100) : 0;
+    var badge = pct >= CONFIG.badgeThreshold*100;
+    var dateStr = r.date.getTime() ? r.date.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    html += '<tr>' +
+      '<td class="rank">' + (i+1) + '</td>' +
+      '<td>' + r.firstName + ' ' + r.lastName + '</td>' +
+      '<td>' + (r.groupe || '—') + '</td>' +
+      '<td>' + quizLabel(r.quiz) + '</td>' +
+      '<td class="score-cell">' + r.score + '/' + r.total + ' (' + pct.toFixed(0) + '%)</td>' +
+      '<td>' + dateStr + '</td>' +
+      '<td>' + (badge ? '<span class="badge-ok">🏆</span>' : '<span class="badge-ko">—</span>') + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('th[data-k]').forEach(function(th){
+    th.addEventListener('click', function(){
+      var k = th.dataset.k;
+      if(currentSort.key === k) currentSort.dir *= -1;
+      else { currentSort.key = k; currentSort.dir = (k === 'nom' || k === 'groupe' || k === 'quiz') ? 1 : -1; }
+      renderTable(getFiltered());
+    });
+  });
+}
+
+/* ---------- Export CSV ---------- */
+function csvEscape(v){
+  var s = String(v == null ? '' : v);
+  return /[",;\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+document.getElementById('exportBtn').addEventListener('click', function(){
+  var data = getFiltered();
+  var rows = [['Date','Quiz','Classe/Groupe','Prénom','Nom','Score','Total','Pourcentage','Badge'].map(csvEscape).join(';')];
+  data.forEach(function(r){
+    var pct = r.total ? (r.score/r.total*100).toFixed(0) : '0';
+    var badge = r.total && (r.score/r.total) >= CONFIG.badgeThreshold ? 'Oui' : 'Non';
+    rows.push([r.date.toISOString(), quizLabel(r.quiz), r.groupe, r.firstName, r.lastName, r.score, r.total, pct+'%', badge].map(csvEscape).join(';'));
+  });
+  var blob = new Blob(['\uFEFF' + rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'dashboard-quiz-asa.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* ---------- Rendu global ---------- */
+function renderAll(){
+  var data = getFiltered();
+  renderKPIs(data);
+  renderQuizCards(data);
+  renderTable(data);
+}
+
+async function loadData(){
+  var status = document.getElementById('status');
+  status.textContent = 'Chargement…';
+  status.classList.remove('error');
+  try{
+    allData = await readPublishedSheet();
+    buildFilterOptions();
+    renderAll();
+    status.textContent = allData.length + ' résultat' + (allData.length>1?'s':'') + ' chargé' + (allData.length>1?'s':'');
+  }catch(err){
+    if(err.message === 'non-configuré'){
+      document.getElementById('configWarning').style.display = 'block';
+      status.textContent = 'Non configuré';
+    } else {
+      status.textContent = 'Erreur : ' + err.message;
+    }
+    status.classList.add('error');
+    renderKPIs([]);
+    document.getElementById('quizCards').innerHTML = '';
+    document.getElementById('tableWrap').innerHTML = '<div class="empty">Aucune donnée disponible.</div>';
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.getElementById('filterQuiz').addEventListener('change', renderAll);
+document.getElementById('filterGroupe').addEventListener('change', renderAll);
+document.getElementById('filterPeriode').addEventListener('change', renderAll);
+
+loadData();
+</script>
+</body>
+</html>
 
