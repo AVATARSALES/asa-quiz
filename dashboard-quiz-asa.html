@@ -356,7 +356,7 @@ function readPublishedSheet(){
     }
     var script = document.createElement('script');
     script.src = 'https://docs.google.com/spreadsheets/d/' + CONFIG.sheetId +
-      '/gviz/tq?tqx=responseHandler:' + cbName + '&sheet=R%C3%A9sultats';
+      '/gviz/tq?tqx=responseHandler:' + cbName + '&gid=0';
     script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
     document.body.appendChild(script);
   });
@@ -568,4 +568,3 @@ loadData();
 </script>
 </body>
 </html>
-
