@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classement Général — ASA Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B35;
+  --navy-deep:#081226;
+  --navy-light:#16284f;
+  --orange:#FF6B00;
+  --orange-glow:#ff8c3d;
+  --blue:#00AAFF;
+  --white:#F5F7FA;
+  --green:#2ECC71;
+  --red:#FF5C5C;
+  --muted:#8CA0C4;
+  --gold:#FFD700;
+  --silver:#C0C0C0;
+  --bronze:#CD7F32;
+  --font-d:'Barlow Condensed',sans-serif;
+  --font-b:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-b);
+  background:var(--navy-deep);
+  color:var(--white);
+  min-height:100vh;
+  padding:24px 20px 60px;
+}
+.wrap{max-width:800px;margin:0 auto;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 4px 10px;
+}
+.brand{
+  font-family:var(--font-d);font-weight:700;letter-spacing:0.08em;
+  font-size:14px;color:var(--muted);text-transform:uppercase;
+}
+.brand span{color:var(--orange);}
+.sound-toggle{
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.04);
+  color:var(--white);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:17px;transition:border-color .2s;
+}
+.sound-toggle:hover{border-color:var(--orange);}
+h1{
+  font-family:var(--font-d);font-weight:800;
+  font-size:clamp(32px,6vw,50px);
+  line-height:1;letter-spacing:-0.01em;
+  background:linear-gradient(120deg,var(--white) 40%,var(--orange));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  margin-bottom:6px;
+}
+.subtitle{
+  font-family:var(--font-d);font-weight:600;font-size:15px;
+  color:var(--muted);letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:24px;
+}
+.toolbar{
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:24px;
+}
+select{
+  font-family:var(--font-b);font-size:14px;padding:10px 14px;
+  border-radius:9px;border:1px solid rgba(255,255,255,0.18);
+  background:var(--navy-light);color:var(--white);cursor:pointer;
+}
+select:focus{outline:none;border-color:var(--blue);}
+.btn{
+  font-family:var(--font-d);font-weight:700;font-size:14px;
+  letter-spacing:.04em;text-transform:uppercase;
+  padding:10px 14px;border-radius:9px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:var(--navy-light);color:var(--white);cursor:pointer;
+  transition:border-color .15s, color .15s;
+}
+.btn:hover{border-color:var(--orange);color:var(--orange);}
+.status{font-size:13px;color:var(--muted);margin-left:auto;}
+.status.error{color:var(--red);}
+
+/* KPIs */
+.kpis{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;margin-bottom:28px;
+}
+.kpi{
+  background:var(--navy-light);border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:16px 18px;text-align:center;
+}
+.kpi .label{
+  font-family:var(--font-d);font-weight:600;font-size:12px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;
+}
+.kpi .value{
+  font-family:var(--font-d);font-weight:800;font-size:30px;line-height:1;
+}
+.kpi .value.orange{color:var(--orange);}
+.kpi .value.blue{color:var(--blue);}
+.kpi .value.green{color:var(--green);}
+
+/* Podium */
+.podium{
+  display:flex;justify-content:center;align-items:flex-end;
+  gap:12px;margin-bottom:30px;padding:0 10px;
+}
+.podium-slot{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--navy-light);border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:18px 16px 14px;
+  transition:transform .2s;flex:1;max-width:200px;
+}
+.podium-slot:hover{transform:translateY(-4px);}
+.podium-slot.gold{border-color:rgba(255,215,0,0.35);box-shadow:0 8px 30px rgba(255,215,0,0.12);}
+.podium-slot.silver{border-color:rgba(192,192,192,0.25);}
+.podium-slot.bronze{border-color:rgba(205,127,50,0.25);}
+.podium-medal{font-size:36px;margin-bottom:8px;}
+.podium-name{
+  font-family:var(--font-d);font-weight:700;font-size:17px;
+  text-align:center;margin-bottom:4px;line-height:1.2;
+}
+.podium-score{
+  font-family:var(--font-d);font-weight:800;font-size:24px;color:var(--orange);
+}
+.podium-meta{font-size:11.5px;color:var(--muted);margin-top:2px;text-align:center;}
+
+/* Liste classement */
+.lb-row{
+  display:grid;grid-template-columns:48px 1fr auto;
+  align-items:center;gap:14px;
+  background:var(--navy-light);border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;padding:12px 16px;margin-bottom:8px;
+  transition:background .15s;
+}
+.lb-row:hover{background:rgba(255,255,255,0.04);}
+.lb-rank{
+  font-family:var(--font-d);font-weight:800;font-size:18px;
+  color:var(--muted);text-align:center;
+}
+.lb-row:nth-child(1) .lb-rank{color:var(--gold);}
+.lb-row:nth-child(2) .lb-rank{color:var(--silver);}
+.lb-row:nth-child(3) .lb-rank{color:var(--bronze);}
+.lb-name{font-size:15px;font-weight:500;}
+.lb-quiz{font-size:12px;color:var(--muted);display:block;margin-top:1px;}
+.lb-score{
+  font-family:var(--font-d);font-weight:700;font-size:17px;color:var(--orange);
+  white-space:nowrap;
+}
+.lb-badge{margin-left:6px;font-size:14px;}
+.empty{
+  padding:40px;text-align:center;color:var(--muted);
+  background:var(--navy-light);border-radius:14px;font-size:15px;
+}
+footer{
+  text-align:center;color:rgba(140,160,196,0.5);
+  font-size:11.5px;margin-top:40px;letter-spacing:.04em;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">Avatar Sales <span>Academy</span></div>
+    <button class="sound-toggle" id="fullscreenBtn" title="Plein écran">⛶</button>
+  </div>
+  <h1>Classement Général</h1>
+  <div class="subtitle">Qui sera le meilleur vendeur ? 🏆</div>
+
+  <div class="toolbar">
+    <select id="filterQuiz">
+      <option value="">Tous les quiz</option>
+    </select>
+    <select id="filterGroupe">
+      <option value="">Tous les groupes</option>
+    </select>
+    <button class="btn" id="refreshBtn">Actualiser</button>
+    <span class="status" id="status">Chargement…</span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <div id="podium"></div>
+  <div id="leaderboard"></div>
+
+  <footer>Avatar Sales Academy — Classement anonymisé · Données en temps réel</footer>
+</div>
+
+<script>
+const CONFIG = {
+  sheetId: '1trEiBtPFs9E1DSOknM1NO2JUvNCjOvMuQovS_6tYG4I',
+  badgeThreshold: 0.7
+};
+
+const QUIZ_LABELS = {
+  'eisenhower': "Matrice d'Eisenhower",
+  'marketing-b2b': 'Marketing Digital B2B'
+};
+
+let allData = [];
+
+/* ---------- Anonymisation ---------- */
+function anonymize(firstName, lastName){
+  var f = String(firstName || '').trim();
+  var l = String(lastName || '').trim();
+  if(!f && !l) return 'Anonyme';
+  var initial = l ? l.charAt(0).toUpperCase() + '.' : '';
+  return f + ' ' + initial;
+}
+
+/* ---------- Lecture Sheet publié ---------- */
+function readPublishedSheet(){
+  return new Promise(function(resolve, reject){
+    var cbName = '_lbCb_' + Date.now();
+    var timeout = setTimeout(function(){ cleanup(); reject(new Error('Délai dépassé')); }, 15000);
+    window[cbName] = function(response){
+      cleanup();
+      if(response.status !== 'ok'){ reject(new Error('Erreur lecture')); return; }
+      var rows = response.table.rows || [];
+      var results = [];
+      for(var i=0; i<rows.length; i++){
+        var c = rows[i].c;
+        if(!c) continue;
+        var val = function(idx){ return c[idx] ? (c[idx].v != null ? c[idx].v : '') : ''; };
+        var dateRaw = val(0);
+        var d = parseDate(dateRaw);
+        results.push({
+          date: d,
+          quiz: String(val(1)).trim(),
+          groupe: String(val(2)).trim(),
+          name: anonymize(val(3), val(4)),
+          fullKey: (String(val(3))+String(val(4))+String(val(2))).toLowerCase().replace(/\s/g,''),
+          score: Number(val(5)) || 0,
+          total: Number(val(6)) || 0
+        });
+      }
+      resolve(results.filter(function(r){ return r.name !== 'Anonyme'; }));
+    };
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+    var script = document.createElement('script');
+    script.src = 'https://docs.google.com/spreadsheets/d/' + CONFIG.sheetId +
+      '/gviz/tq?tqx=responseHandler:' + cbName + '&sheet=Resultats';
+    script.onerror = function(){ cleanup(); reject(new Error('Erreur réseau')); };
+    document.body.appendChild(script);
+  });
+}
+
+function parseDate(v){
+  if(v instanceof Date) return v;
+  if(typeof v === 'string' && v.indexOf('Date(') === 0){
+    var p = v.slice(5,-1).split(',').map(Number);
+    return new Date(p[0], p[1]||0, p[2]||1, p[3]||0, p[4]||0, p[5]||0);
+  }
+  var d = new Date(v);
+  return isNaN(d) ? new Date(0) : d;
+}
+function quizLabel(k){ return QUIZ_LABELS[k] || k || '—'; }
+
+/* ---------- Meilleur score par apprenant ---------- */
+function bestScores(data){
+  var map = {};
+  data.forEach(function(r){
+    var pct = r.total ? r.score / r.total : 0;
+    var key = r.fullKey + '|' + r.quiz;
+    if(!map[key] || pct > map[key].pct){
+      map[key] = { name:r.name, quiz:r.quiz, groupe:r.groupe, score:r.score, total:r.total, pct:pct, date:r.date };
+    }
+  });
+  var arr = Object.values(map);
+  arr.sort(function(a,b){ return b.pct - a.pct || a.date - b.date; });
+  return arr;
+}
+
+/* ---------- Filtres ---------- */
+function getFiltered(){
+  var fq = document.getElementById('filterQuiz').value;
+  var fg = document.getElementById('filterGroupe').value;
+  return allData.filter(function(r){
+    if(fq && r.quiz !== fq) return false;
+    if(fg && r.groupe !== fg) return false;
+    return true;
+  });
+}
+function buildFilterOptions(){
+  var quizzes = Array.from(new Set(allData.map(function(r){ return r.quiz; }).filter(Boolean))).sort();
+  var groupes = Array.from(new Set(allData.map(function(r){ return r.groupe; }).filter(Boolean))).sort();
+  var selQ = document.getElementById('filterQuiz');
+  var kQ = selQ.value;
+  selQ.innerHTML = '<option value="">Tous les quiz</option>' +
+    quizzes.map(function(q){ return '<option value="'+q+'">'+quizLabel(q)+'</option>'; }).join('');
+  selQ.value = kQ;
+  var selG = document.getElementById('filterGroupe');
+  var kG = selG.value;
+  selG.innerHTML = '<option value="">Tous les groupes</option>' +
+    groupes.map(function(g){ return '<option value="'+g+'">'+g+'</option>'; }).join('');
+  selG.value = kG;
+}
+
+/* ---------- Rendu ---------- */
+function renderKPIs(best){
+  var el = document.getElementById('kpis');
+  if(!best.length){ el.innerHTML = ''; return; }
+  var participants = new Set(best.map(function(r){ return r.name; })).size;
+  var avgPct = (best.reduce(function(s,r){ return s + r.pct; }, 0) / best.length * 100);
+  var badges = best.filter(function(r){ return r.pct >= CONFIG.badgeThreshold; }).length;
+  el.innerHTML =
+    '<div class="kpi"><div class="label">Participants</div><div class="value blue">' + participants + '</div></div>' +
+    '<div class="kpi"><div class="label">Score moyen</div><div class="value orange">' + avgPct.toFixed(0) + '%</div></div>' +
+    '<div class="kpi"><div class="label">Badges obtenus</div><div class="value green">' + badges + '</div></div>';
+}
+
+function renderPodium(best){
+  var el = document.getElementById('podium');
+  if(best.length < 1){ el.innerHTML = ''; return; }
+  var top3 = best.slice(0, 3);
+  var medals = ['🥇','🥈','🥉'];
+  var classes = ['gold','silver','bronze'];
+  /* Afficher dans l'ordre : 2e, 1er, 3e pour l'effet podium visuel */
+  var order = top3.length >= 3 ? [1,0,2] : top3.length === 2 ? [1,0] : [0];
+  el.innerHTML = '<div class="podium">' +
+    order.map(function(i){
+      var r = top3[i];
+      var pct = (r.pct * 100).toFixed(0);
+      return '<div class="podium-slot ' + classes[i] + '" style="' + (i===0?'padding-bottom:30px;':'') + '">' +
+        '<div class="podium-medal">' + medals[i] + '</div>' +
+        '<div class="podium-name">' + r.name + '</div>' +
+        '<div class="podium-score">' + pct + '%</div>' +
+        '<div class="podium-meta">' + quizLabel(r.quiz) + '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
+function renderList(best){
+  var el = document.getElementById('leaderboard');
+  if(!best.length){ el.innerHTML = '<div class="empty">Aucun résultat pour le moment. Lancez-vous ! 🚀</div>'; return; }
+  el.innerHTML = best.map(function(r, i){
+    var pct = (r.pct * 100).toFixed(0);
+    var badge = r.pct >= CONFIG.badgeThreshold ? '<span class="lb-badge">🏆</span>' : '';
+    return '<div class="lb-row">' +
+      '<span class="lb-rank">' + (i+1) + '</span>' +
+      '<span><span class="lb-name">' + r.name + '</span>' +
+      '<span class="lb-quiz">' + quizLabel(r.quiz) + (r.groupe ? ' · ' + r.groupe : '') + '</span></span>' +
+      '<span class="lb-score">' + r.score + '/' + r.total + ' (' + pct + '%)' + badge + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function renderAll(){
+  var filtered = getFiltered();
+  var best = bestScores(filtered);
+  renderKPIs(best);
+  renderPodium(best);
+  renderList(best);
+}
+
+async function loadData(){
+  var status = document.getElementById('status');
+  status.textContent = 'Chargement…';
+  status.classList.remove('error');
+  try{
+    allData = await readPublishedSheet();
+    buildFilterOptions();
+    renderAll();
+    status.textContent = allData.length + ' passage' + (allData.length>1?'s':'');
+  }catch(err){
+    status.textContent = 'Erreur : ' + err.message;
+    status.classList.add('error');
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.getElementById('filterQuiz').addEventListener('change', renderAll);
+document.getElementById('filterGroupe').addEventListener('change', renderAll);
+
+/* Plein écran */
+var fsBtn = document.getElementById('fullscreenBtn');
+fsBtn.addEventListener('click', async function(){
+  if(document.fullscreenElement){
+    document.exitFullscreen(); fsBtn.textContent='⛶'; return;
+  }
+  try{ await document.documentElement.requestFullscreen(); fsBtn.textContent='✕'; }
+  catch(e){ window.open(window.location.href,'_blank'); }
+});
+document.addEventListener('fullscreenchange', function(){
+  if(!document.fullscreenElement) fsBtn.textContent='⛶';
+});
+
+loadData();
+</script>
+</body>
+</html>
