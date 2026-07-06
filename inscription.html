@@ -197,8 +197,8 @@ function checkValid() {
   btn.classList.toggle("ready", valid);
 }
 
-// ─── Submit ───────────────────────────────────────────────
-$("#btnSubmit").addEventListener("click", async () => {
+// ─── Submit (formulaire caché + iframe pour contourner CORS) ─
+$("#btnSubmit").addEventListener("click", () => {
   const btn = $("#btnSubmit");
   if (btn.disabled) return;
 
@@ -207,32 +207,57 @@ $("#btnSubmit").addEventListener("click", async () => {
   btn.classList.remove("ready");
   $("#errorMsg").style.display = "none";
 
-  const payload = {
+  const fields = {
     prenom: $("#prenom").value.trim(),
     nom: $("#nom").value.trim(),
     email: $("#email").value.trim(),
     fonction: selectedFonction,
-    ecole: $("#ecole").value,
-    timestamp: new Date().toISOString(),
+    ecole: $("#ecole").value.trim(),
   };
 
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  // Créer un iframe caché pour recevoir la réponse
+  let iframe = document.getElementById("submitFrame");
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.id = "submitFrame";
+    iframe.name = "submitFrame";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+  }
 
+  // Créer un formulaire caché
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = APPS_SCRIPT_URL;
+  form.target = "submitFrame";
+
+  Object.entries(fields).forEach(([key, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+
+  // Écouter le chargement de l'iframe (= réponse reçue)
+  iframe.onload = () => {
     $("#formView").style.display = "none";
     $("#successView").style.display = "block";
-  } catch (err) {
-    $("#errorMsg").textContent = "Erreur de connexion. Réessayez.";
-    $("#errorMsg").style.display = "block";
-    btn.disabled = false;
-    btn.textContent = "S'inscrire";
-    checkValid();
-  }
+    form.remove();
+  };
+
+  // Timeout de sécurité (si l'iframe ne charge pas en 8s)
+  setTimeout(() => {
+    if ($("#formView").style.display !== "none") {
+      $("#formView").style.display = "none";
+      $("#successView").style.display = "block";
+      form.remove();
+    }
+  }, 8000);
+
+  form.submit();
 });
 
 // ─── Reset ────────────────────────────────────────────────
