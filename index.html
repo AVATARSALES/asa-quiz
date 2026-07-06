@@ -175,7 +175,7 @@
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────
-const APPS_SCRIPT_URL = "COLLER_ICI_TON_URL_APPS_SCRIPT";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylQhqTcPGwwmZsB5e_DAkQzBuLBdeOSD5pFge4tIOyRQJsx7w5j2ueTZfvyGaxittGSA/exec";
 // ──────────────────────────────────────────────────────────
 
 const $ = (s) => document.querySelector(s);
@@ -183,28 +183,30 @@ const $$ = (s) => document.querySelectorAll(s);
 
 let selectedFonction = "";
 
-// ─── Charger les écoles au démarrage ──────────────────────
-async function loadEcoles() {
-  try {
-    const res = await fetch(APPS_SCRIPT_URL + "?action=ecoles");
-    const json = await res.json();
-
-    if (json.status === "success" && json.ecoles.length > 0) {
-      const select = $("#ecole");
-      json.ecoles.forEach((nom) => {
-        const opt = document.createElement("option");
-        opt.value = nom;
-        opt.textContent = nom;
-        select.appendChild(opt);
-      });
-      $("#ecoleLoading").style.display = "none";
-      select.style.display = "";
-    } else {
-      $("#ecoleLoading").textContent = "Aucune école disponible.";
-    }
-  } catch (err) {
-    $("#ecoleLoading").textContent = "Erreur de chargement. Rechargez la page.";
+// ─── Charger les écoles au démarrage (JSONP pour éviter CORS) ─
+window.handleEcoles = function(json) {
+  if (json.status === "success" && json.ecoles.length > 0) {
+    const select = $("#ecole");
+    json.ecoles.forEach(function(nom) {
+      const opt = document.createElement("option");
+      opt.value = nom;
+      opt.textContent = nom;
+      select.appendChild(opt);
+    });
+    $("#ecoleLoading").style.display = "none";
+    select.style.display = "";
+  } else {
+    $("#ecoleLoading").textContent = "Aucune école disponible.";
   }
+};
+
+function loadEcoles() {
+  const script = document.createElement("script");
+  script.src = APPS_SCRIPT_URL + "?action=ecoles&callback=handleEcoles";
+  script.onerror = function() {
+    $("#ecoleLoading").textContent = "Erreur de chargement. Rechargez la page.";
+  };
+  document.head.appendChild(script);
 }
 loadEcoles();
 
