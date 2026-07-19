@@ -110,7 +110,7 @@
       <h2>Inscription</h2>
 
       <div class="field">
-        <label>École / CFA <span class="req">*</span></label>
+        <label>École / CFA <span style="font-size:10px;opacity:0.5;text-transform:none;">(optionnel)</span></label>
         <input type="text" id="ecole" placeholder="Nom de votre école ou CFA">
       </div>
 
@@ -162,7 +162,7 @@
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylQhqTcPGwwmZsB5e_DAkQzBuLBdeOSD5pFge4tIOyRQJsx7w5j2ueTZfvyGaxittGSA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQQeCxieyHMptVhOQPZ6QMFV_S_ZTHWAtvlBFjv0V7A8JPiF7QIW6A0pWmdYvGbjpWJA/exec";
 // ──────────────────────────────────────────────────────────
 
 const $ = (s) => document.querySelector(s);
@@ -181,7 +181,7 @@ $$(".chip").forEach((chip) => {
 });
 
 // ─── Validation ───────────────────────────────────────────
-$$("#prenom, #nom, #email, #ecole").forEach((el) => {
+$$("#prenom, #nom, #email").forEach((el) => {
   el.addEventListener("input", checkValid);
   el.addEventListener("change", checkValid);
 });
@@ -190,8 +190,7 @@ function checkValid() {
   const p = $("#prenom").value.trim();
   const n = $("#nom").value.trim();
   const e = $("#email").value.trim();
-  const ec = $("#ecole").value;
-  const valid = p && n && e && e.includes("@") && ec && selectedFonction;
+  const valid = p && n && e && e.includes("@") && selectedFonction;
   const btn = $("#btnSubmit");
   btn.disabled = !valid;
   btn.classList.toggle("ready", valid);
