@@ -38,13 +38,12 @@
       text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 6px;
     }
     .field label .req { color: var(--orange); margin-left: 3px; }
-    .field input, .field select {
+    .field input {
       width: 100%; padding: 11px 14px; border-radius: 8px;
       border: 2px solid #E2E6EC; font-size: 14px; font-family: inherit;
       color: var(--navy); background: #FAFBFC; outline: none; transition: border-color 0.15s;
-      -webkit-appearance: none; appearance: none;
     }
-    .field input:focus, .field select:focus { border-color: var(--blue); }
+    .field input:focus { border-color: var(--blue); }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
       padding: 8px 16px; border-radius: 8px; border: 2px solid #E2E6EC;
@@ -105,14 +104,8 @@
   </div>
 
   <div class="card">
-    <!-- ── FORM ── -->
     <div id="formView">
       <h2>Inscription</h2>
-
-      <div class="field">
-        <label>École / CFA <span style="font-size:10px;opacity:0.5;text-transform:none;">(optionnel)</span></label>
-        <input type="text" id="ecole" placeholder="Nom de votre école ou CFA">
-      </div>
 
       <div class="field">
         <label>Prénom <span class="req">*</span></label>
@@ -141,14 +134,13 @@
 
       <div class="info-box">
         <span>ℹ️</span>
-        <p>Après inscription, vous recevrez par email les liens d'accès <strong>Apprenants</strong> et <strong>Formateurs</strong> correspondant à votre école.</p>
+        <p>Après inscription, vous recevrez par email vos liens d'accès <strong>Apprenants</strong> et <strong>Formateurs</strong>.</p>
       </div>
 
       <p class="error-msg" id="errorMsg"></p>
       <button class="btn-submit" id="btnSubmit" disabled>S'inscrire</button>
     </div>
 
-    <!-- ── SUCCESS ── -->
     <div class="success-view" id="successView">
       <div class="check">✓</div>
       <h3>Inscription enregistrée !</h3>
@@ -161,16 +153,12 @@
 </div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzabtY69bcXHNohK6IVDSfc2fY-LxREBUxtBUMC3JZWMPtvEG5C1UgaIRGpIJT7UdikbA/exec";
-// ──────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNojWDXwQscu938J6cm6BT3ep-CxeHFUWCTK3ltX_Mapa2HR-7XxZ0v1dP2_QgZ3HHiw/exec";
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
-
 let selectedFonction = "";
 
-// ─── Chips ────────────────────────────────────────────────
 $$(".chip").forEach((chip) => {
   chip.addEventListener("click", () => {
     $$(".chip").forEach((c) => c.classList.remove("active"));
@@ -180,10 +168,8 @@ $$(".chip").forEach((chip) => {
   });
 });
 
-// ─── Validation ───────────────────────────────────────────
 $$("#prenom, #nom, #email").forEach((el) => {
   el.addEventListener("input", checkValid);
-  el.addEventListener("change", checkValid);
 });
 
 function checkValid() {
@@ -196,7 +182,6 @@ function checkValid() {
   btn.classList.toggle("ready", valid);
 }
 
-// ─── Submit (formulaire caché + iframe pour contourner CORS) ─
 $("#btnSubmit").addEventListener("click", () => {
   const btn = $("#btnSubmit");
   if (btn.disabled) return;
@@ -206,15 +191,6 @@ $("#btnSubmit").addEventListener("click", () => {
   btn.classList.remove("ready");
   $("#errorMsg").style.display = "none";
 
-  const fields = {
-    prenom: $("#prenom").value.trim(),
-    nom: $("#nom").value.trim(),
-    email: $("#email").value.trim(),
-    fonction: selectedFonction,
-    ecole: $("#ecole").value.trim(),
-  };
-
-  // Créer un iframe caché pour recevoir la réponse
   let iframe = document.getElementById("submitFrame");
   if (!iframe) {
     iframe = document.createElement("iframe");
@@ -224,11 +200,17 @@ $("#btnSubmit").addEventListener("click", () => {
     document.body.appendChild(iframe);
   }
 
-  // Créer un formulaire caché
   const form = document.createElement("form");
   form.method = "POST";
   form.action = APPS_SCRIPT_URL;
   form.target = "submitFrame";
+
+  const fields = {
+    prenom: $("#prenom").value.trim(),
+    nom: $("#nom").value.trim(),
+    email: $("#email").value.trim(),
+    fonction: selectedFonction,
+  };
 
   Object.entries(fields).forEach(([key, value]) => {
     const input = document.createElement("input");
@@ -240,14 +222,12 @@ $("#btnSubmit").addEventListener("click", () => {
 
   document.body.appendChild(form);
 
-  // Écouter le chargement de l'iframe (= réponse reçue)
   iframe.onload = () => {
     $("#formView").style.display = "none";
     $("#successView").style.display = "block";
     form.remove();
   };
 
-  // Timeout de sécurité (si l'iframe ne charge pas en 8s)
   setTimeout(() => {
     if ($("#formView").style.display !== "none") {
       $("#formView").style.display = "none";
@@ -259,12 +239,10 @@ $("#btnSubmit").addEventListener("click", () => {
   form.submit();
 });
 
-// ─── Reset ────────────────────────────────────────────────
 $("#btnReset").addEventListener("click", () => {
   $("#prenom").value = "";
   $("#nom").value = "";
   $("#email").value = "";
-  $("#ecole").value = "";
   selectedFonction = "";
   $$(".chip").forEach((c) => c.classList.remove("active"));
   $("#btnSubmit").textContent = "S'inscrire";
