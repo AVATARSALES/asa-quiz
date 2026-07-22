@@ -908,5 +908,8 @@
   }, { threshold: 0.4 });
   hudIo.observe(hud);
 </script>
+
+<!-- iframe-resizer : ajuste automatiquement la hauteur de l'iframe côté site parent (GitHub Pages / WordPress) -->
+<script src="https://cdn.jsdelivr.net/npm/@iframe-resizer/child@5/index.umd.js"></script>
 </body>
 </html>
