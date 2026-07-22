@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTS NDRC en alternance — Avatar Sales Academy</title>
+<meta name="description" content="La préparation au BTS NDRC pensée pour les alternants : Serious Games immersifs pour ancrer SPIN Selling, SONCAS et la digitalisation sans sacrifier ton temps libre.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit:#0D1B35;
+    --nuit-profonde:#08101F;
+    --ardoise:#152949;
+    --ardoise-clair:#1D3358;
+    --ignition:#FF6B00;
+    --ignition-clair:#FFA35C;
+    --reacteur:#00AAFF;
+    --craie:#F2EFE6;
+    --craie-faible:rgba(242,239,230,0.62);
+    --ligne:rgba(242,239,230,0.12);
+    --danger:#FF4D5E;
+    --ok:#38D9A9;
+    --radius:14px;
+    --wrap:1180px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  body{
+    margin:0;
+    background:var(--nuit);
+    color:var(--craie);
+    font-family:'DM Sans',sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%;display:block;}
+  a{color:inherit;}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 28px;}
+  h1,h2,h3,h4{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:800;
+    letter-spacing:0.01em;
+    margin:0;
+    line-height:1.05;
+    text-transform:uppercase;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ignition);
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:2px;
+    background:var(--ignition);
+    display:inline-block;
+  }
+  p.lead{font-size:1.1rem;color:var(--craie-faible);max-width:56ch;}
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-size:1.02rem;
+    padding:15px 30px;
+    border-radius:8px;
+    text-decoration:none;
+    border:2px solid transparent;
+    transition:transform .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:focus-visible{outline:3px solid var(--reacteur);outline-offset:3px;}
+  .btn-primary{background:var(--ignition);color:var(--nuit-profonde);box-shadow:0 8px 24px rgba(255,107,0,0.25);}
+  .btn-primary:hover{box-shadow:0 12px 30px rgba(255,107,0,0.4);}
+  .btn-ghost{border-color:var(--ligne);color:var(--craie);}
+  .btn-ghost:hover{border-color:var(--reacteur);}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(8,16,31,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--ligne);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;}
+  .brand{display:flex;flex-direction:column;line-height:1;text-decoration:none;}
+  .brand strong{font-family:'Barlow Condensed';font-weight:800;font-size:1.35rem;letter-spacing:0.02em;text-transform:uppercase;}
+  .brand span{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:0.18em;color:var(--reacteur);text-transform:uppercase;margin-top:3px;}
+  .nav-links{display:flex;align-items:center;gap:30px;list-style:none;margin:0;padding:0;}
+  .nav-links a{
+    font-family:'Barlow Condensed';font-weight:600;text-transform:uppercase;letter-spacing:0.03em;font-size:0.98rem;
+    text-decoration:none;color:var(--craie-faible);transition:color .15s;
+  }
+  .nav-links a:hover{color:var(--ignition-clair);}
+  .nav-cta{display:flex;align-items:center;gap:18px;}
+  .burger{display:none;background:none;border:none;color:var(--craie);cursor:pointer;padding:6px;}
+  @media (max-width:900px){
+    .nav-links{position:fixed;top:69px;left:0;right:0;background:var(--nuit-profonde);flex-direction:column;align-items:flex-start;padding:22px 28px;gap:18px;border-bottom:1px solid var(--ligne);transform:translateY(-130%);transition:transform .25s ease;}
+    .nav-links.open{transform:translateY(0);}
+    .nav-cta .btn-primary{padding:11px 18px;font-size:0.9rem;}
+    .burger{display:block;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:88px 0 70px;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 900px 500px at 85% -10%, rgba(0,170,255,0.18), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 5% 110%, rgba(255,107,0,0.14), transparent 60%),
+      var(--nuit);
+    border-bottom:1px solid var(--ligne);
+  }
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:56px;align-items:center;}
+  @media (max-width:940px){.hero-grid{grid-template-columns:1fr;}}
+  .hero h1{font-size:clamp(2.5rem,5.4vw,4rem);margin:18px 0 22px;}
+  .hero h1 em{font-style:normal;color:var(--ignition);}
+  .hero-cta-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:32px;}
+  .hero-note{margin-top:16px;font-family:'JetBrains Mono';font-size:12px;color:var(--craie-faible);letter-spacing:0.03em;}
+
+  /* HUD signature element */
+  .hud{
+    background:var(--nuit-profonde);
+    border:1px solid var(--ligne);
+    border-radius:16px;
+    padding:26px 26px 22px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.35);
+  }
+  .hud-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .hud-title{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.2em;color:var(--craie-faible);text-transform:uppercase;}
+  .hud-live{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono';font-size:10.5px;color:var(--danger);letter-spacing:0.1em;}
+  .hud-live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--danger);animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+  .stat-row{margin-bottom:16px;}
+  .stat-row:last-child{margin-bottom:0;}
+  .stat-label{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:11.5px;letter-spacing:0.05em;color:var(--craie-faible);margin-bottom:6px;text-transform:uppercase;}
+  .stat-label b{color:var(--craie);font-weight:600;}
+  .meter{height:9px;border-radius:5px;background:rgba(242,239,230,0.08);overflow:hidden;}
+  .meter i{
+    display:block;height:100%;border-radius:5px;width:0%;
+    transition:width 1.3s cubic-bezier(.2,.9,.25,1);
+  }
+  .meter.danger i{background:linear-gradient(90deg,#FF4D5E,#FF8A6B);}
+  .meter.warn i{background:linear-gradient(90deg,var(--ignition),var(--ignition-clair));}
+  .meter.info i{background:linear-gradient(90deg,#0077C2,var(--reacteur));}
+  .hud.in-view .m1{width:18%;}
+  .hud.in-view .m2{width:88%;}
+  .hud.in-view .m3{width:34%;}
+  .hud-foot{margin-top:20px;padding-top:16px;border-top:1px dashed var(--ligne);font-family:'JetBrains Mono';font-size:11px;color:var(--craie-faible);}
+  .hud-foot b{color:var(--reacteur);}
+
+  /* ---------- SECTION GENERIC ---------- */
+  section{padding:86px 0;}
+  .section-head{max-width:640px;margin-bottom:52px;}
+  .section-head h2{font-size:clamp(1.9rem,3.6vw,2.8rem);margin-top:14px;}
+  .section-head p{margin-top:16px;}
+  .alt-bg{background:var(--nuit-profonde);border-top:1px solid var(--ligne);border-bottom:1px solid var(--ligne);}
+
+  /* Constat cards */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  @media (max-width:900px){.grid-3{grid-template-columns:1fr;}}
+  .card{
+    background:var(--ardoise);
+    border:1px solid var(--ligne);
+    border-radius:var(--radius);
+    padding:28px 26px;
+  }
+  .card .tag{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--danger);}
+  .card h3{font-size:1.5rem;margin:12px 0 10px;text-transform:none;}
+  .card p{color:var(--craie-faible);font-size:0.98rem;margin:0;}
+
+  /* VS comparatif */
+  .vs-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:28px;align-items:stretch;}
+  @media (max-width:820px){.vs-wrap{grid-template-columns:1fr;}.vs-badge{margin:8px auto;}}
+  .vs-badge{
+    align-self:center;
+    font-family:'Barlow Condensed';font-weight:900;font-size:1.1rem;
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--nuit);border:2px solid var(--ignition);color:var(--ignition);
+  }
+  .vs-col{border-radius:var(--radius);padding:30px 28px;border:1px solid var(--ligne);}
+  .vs-old{background:var(--nuit-profonde);}
+  .vs-new{background:linear-gradient(160deg, rgba(0,170,255,0.12), rgba(255,107,0,0.08)), var(--ardoise);border-color:rgba(0,170,255,0.35);}
+  .vs-col .tag{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;}
+  .vs-old .tag{color:var(--craie-faible);}
+  .vs-new .tag{color:var(--reacteur);}
+  .vs-col h3{font-size:1.7rem;margin:10px 0 18px;text-transform:none;}
+  .vs-col ul{margin:0;padding:0;list-style:none;}
+  .vs-col li{padding:10px 0;border-top:1px solid var(--ligne);font-size:0.97rem;color:var(--craie-faible);display:flex;gap:10px;}
+  .vs-col li:first-child{border-top:none;}
+  .vs-old li::before{content:"✕";color:var(--danger);font-weight:700;flex-shrink:0;}
+  .vs-new li::before{content:"✓";color:var(--ok);font-weight:700;flex-shrink:0;}
+  .vs-new li{color:var(--craie);}
+
+  /* Feature grid (méthode) */
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  @media (max-width:1000px){.grid-4{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.grid-4{grid-template-columns:1fr;}}
+  .feature{background:var(--nuit-profonde);border:1px solid var(--ligne);border-radius:var(--radius);padding:26px 22px;}
+  .feature .ico{width:42px;height:42px;border-radius:10px;background:rgba(255,107,0,0.14);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .feature .ico svg{width:22px;height:22px;stroke:var(--ignition);}
+  .feature h3{font-size:1.28rem;text-transform:none;margin-bottom:8px;}
+  .feature p{color:var(--craie-faible);font-size:0.94rem;margin:0;}
+
+  /* Niveaux / épreuves */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  @media (max-width:940px){.levels{grid-template-columns:1fr;}}
+  .level{
+    position:relative;
+    background:var(--ardoise);
+    border:1px solid var(--ligne);
+    border-radius:var(--radius);
+    padding:30px 26px 26px;
+    overflow:hidden;
+  }
+  .level::before{
+    content:attr(data-n);
+    position:absolute;top:-18px;right:-6px;
+    font-family:'Barlow Condensed';font-weight:900;font-size:6.2rem;
+    color:rgba(242,239,230,0.045);
+    line-height:1;
+  }
+  .level .lvl-tag{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;color:var(--reacteur);text-transform:uppercase;}
+  .level h3{font-size:1.55rem;margin:10px 0 12px;text-transform:none;position:relative;}
+  .level p{color:var(--craie-faible);font-size:0.95rem;margin:0 0 16px;position:relative;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;position:relative;}
+  .chip{
+    font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.03em;
+    padding:5px 11px;border-radius:20px;
+    background:rgba(255,107,0,0.12);color:var(--ignition-clair);
+    border:1px solid rgba(255,107,0,0.3);
+  }
+
+  /* Fondateur */
+  .founder{display:grid;grid-template-columns:0.55fr 1fr;gap:52px;align-items:center;}
+  @media (max-width:900px){.founder{grid-template-columns:1fr;}}
+  .founder-card{
+    background:var(--nuit-profonde);border:1px solid var(--ligne);border-radius:20px;padding:34px;
+    text-align:center;
+  }
+  .avatar-ring{
+    width:132px;height:132px;border-radius:50%;margin:0 auto 20px;
+    background:conic-gradient(from 220deg, var(--ignition), var(--reacteur), var(--ignition));
+    display:flex;align-items:center;justify-content:center;padding:5px;
+  }
+  .avatar-ring .core{
+    width:100%;height:100%;border-radius:50%;background:var(--nuit-profonde);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Barlow Condensed';font-weight:800;font-size:2rem;color:var(--craie);
+  }
+  .founder-card .years{font-family:'JetBrains Mono';font-size:12px;color:var(--craie-faible);letter-spacing:0.1em;text-transform:uppercase;}
+  .founder-card .num{font-family:'Barlow Condensed';font-weight:900;font-size:2.6rem;color:var(--ignition);display:block;}
+  .founder-text blockquote{margin:18px 0 0;padding-left:20px;border-left:3px solid var(--reacteur);font-style:normal;color:var(--craie);font-size:1.08rem;}
+  .founder-text p{color:var(--craie-faible);}
+
+  /* FAQ */
+  .faq{max-width:820px;}
+  details{
+    border:1px solid var(--ligne);border-radius:12px;padding:18px 22px;margin-bottom:14px;
+    background:var(--ardoise);
+  }
+  summary{
+    cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px;
+    font-family:'Barlow Condensed';font-weight:700;font-size:1.15rem;text-transform:none;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::after{content:"+";font-size:1.6rem;color:var(--ignition);flex-shrink:0;transition:transform .2s;}
+  details[open] summary::after{transform:rotate(45deg);}
+  details p{color:var(--craie-faible);margin:14px 0 0;font-size:0.97rem;}
+
+  /* CTA final */
+  .cta-final{
+    text-align:center;
+    background:
+      radial-gradient(ellipse 800px 400px at 50% 0%, rgba(255,107,0,0.16), transparent 65%),
+      var(--nuit-profonde);
+    border-top:1px solid var(--ligne);
+  }
+  .cta-final .eyebrow{justify-content:center;}
+  .cta-final .eyebrow::before{display:none;}
+  .cta-final h2{font-size:clamp(2.2rem,5vw,3.4rem);margin:16px auto 18px;max-width:16ch;}
+  .cta-final p{max-width:52ch;margin:0 auto 30px;color:var(--craie-faible);}
+  .cta-final .hero-cta-row{justify-content:center;}
+
+  /* Footer */
+  footer{padding:52px 0 34px;border-top:1px solid var(--ligne);}
+  .foot-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px;margin-bottom:34px;}
+  .foot-links{display:flex;gap:26px;flex-wrap:wrap;list-style:none;padding:0;margin:0;}
+  .foot-links a{text-decoration:none;color:var(--craie-faible);font-size:0.92rem;}
+  .foot-links a:hover{color:var(--reacteur);}
+  .foot-bottom{border-top:1px solid var(--ligne);padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:0.85rem;color:var(--craie-faible);}
+  .foot-bottom a{text-decoration:underline;}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.is-visible{opacity:1;transform:none;}
+
+  /* ---------- Galerie méthode (images plateforme) ---------- */
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px;}
+  @media (max-width:900px){.gallery{grid-template-columns:repeat(2,1fr);}}
+  .gallery figure{margin:0;border:1px solid var(--ligne);border-radius:12px;overflow:hidden;background:var(--nuit-profonde);}
+  .gallery img{width:100%;height:150px;object-fit:cover;display:block;}
+  .gallery figcaption{padding:12px 14px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.06em;color:var(--craie-faible);text-transform:uppercase;}
+
+  /* ---------- Vidéo ---------- */
+  .video-wrap{max-width:820px;margin:0 auto;}
+  .video-frame{position:relative;padding-top:56.25%;border-radius:16px;overflow:hidden;border:1px solid var(--ligne);box-shadow:0 30px 60px rgba(0,0,0,0.35);}
+  .video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+
+  /* ---------- 6 blocs d'épreuves ---------- */
+  .modules{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media (max-width:940px){.modules{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:640px){.modules{grid-template-columns:1fr;}}
+  .module-card{background:var(--ardoise);border:1px solid var(--ligne);border-radius:var(--radius);padding:24px 22px;position:relative;}
+  .module-card .m-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .module-card .m-code{
+    font-family:'Barlow Condensed';font-weight:900;font-size:1.5rem;
+    width:46px;height:46px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,170,255,0.14);color:var(--reacteur);
+  }
+  .module-card.is-vente .m-code{background:rgba(255,107,0,0.16);color:var(--ignition);}
+  .module-card h3{font-size:1.18rem;text-transform:none;line-height:1.2;}
+  .module-card p{color:var(--craie-faible);font-size:0.92rem;margin:0;}
+  .module-card .chip{margin-top:12px;display:inline-block;}
+
+  .concepts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;}
+  .concept-chip{
+    font-family:'JetBrains Mono';font-size:12px;letter-spacing:0.03em;
+    padding:9px 16px;border-radius:20px;
+    background:var(--nuit-profonde);border:1px solid var(--ligne);color:var(--craie);
+  }
+
+  /* ---------- Tarifs ---------- */
+  .pricing-tabs{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+  @media (max-width:880px){.pricing-tabs{grid-template-columns:1fr;}}
+  .price-card{
+    background:var(--nuit-profonde);border:1px solid var(--ligne);border-radius:18px;
+    padding:34px 30px;display:flex;flex-direction:column;
+  }
+  .price-card.highlight{border-color:rgba(255,107,0,0.4);background:linear-gradient(160deg, rgba(255,107,0,0.08), transparent), var(--nuit-profonde);}
+  .price-card .p-tag{font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--reacteur);}
+  .price-card.highlight .p-tag{color:var(--ignition);}
+  .price-card h3{font-size:1.9rem;text-transform:none;margin:10px 0 6px;}
+  .price-card .p-sub{color:var(--craie-faible);font-size:0.94rem;margin-bottom:20px;}
+  .price-amount{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+  .price-amount .num{font-family:'Barlow Condensed';font-weight:900;font-size:2.8rem;color:var(--craie);}
+  .price-amount .per{font-family:'JetBrains Mono';font-size:12.5px;color:var(--craie-faible);}
+  .price-note{font-family:'JetBrains Mono';font-size:11.5px;color:var(--craie-faible);margin-bottom:22px;}
+  .price-list{list-style:none;padding:0;margin:0 0 26px;flex-grow:1;}
+  .price-list li{padding:9px 0;border-top:1px solid var(--ligne);font-size:0.93rem;color:var(--craie-faible);display:flex;gap:9px;}
+  .price-list li:first-child{border-top:none;}
+  .price-list li::before{content:"✓";color:var(--ok);font-weight:700;flex-shrink:0;}
+  .price-card .btn{justify-content:center;width:100%;}
+
+  /* ---------- Partenaires / badges ---------- */
+  .partners-strip{display:flex;align-items:center;justify-content:center;gap:46px;flex-wrap:wrap;opacity:0.85;}
+  .partners-strip img{height:34px;width:auto;filter:grayscale(1) brightness(1.6);opacity:0.8;}
+  .badges-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .badges-row img{height:46px;width:auto;border-radius:6px;}
+
+  /* ---------- Avis (placeholder) ---------- */
+  .placeholder-flag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--ignition-clair);background:rgba(255,107,0,0.1);border:1px dashed rgba(255,107,0,0.4);
+    padding:6px 12px;border-radius:20px;margin-bottom:18px;
+  }
+  .reviews{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  @media (max-width:940px){.reviews{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.reviews{grid-template-columns:1fr;}}
+  .review-card{background:var(--ardoise);border:1px solid var(--ligne);border-radius:var(--radius);padding:24px 22px;display:flex;flex-direction:column;}
+  .review-stars{color:var(--ignition);font-size:0.95rem;letter-spacing:2px;margin-bottom:12px;}
+  .review-card p.quote{color:var(--craie);font-size:0.94rem;margin:0 0 18px;flex-grow:1;}
+  .review-who{display:flex;align-items:center;gap:12px;border-top:1px solid var(--ligne);padding-top:14px;}
+  .review-avatar{
+    width:38px;height:38px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg, var(--reacteur), var(--ignition));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Barlow Condensed';font-weight:800;font-size:0.95rem;color:var(--nuit-profonde);
+  }
+  .review-who .name{font-family:'Barlow Condensed';font-weight:700;font-size:1rem;text-transform:none;}
+  .review-who .role{font-family:'JetBrains Mono';font-size:10.5px;color:var(--craie-faible);text-transform:uppercase;letter-spacing:0.04em;}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav wrap">
+    <a href="#" class="brand">
+      <strong>Avatar Sales Academy</strong>
+      <span>BTS NDRC · Prépa immersive</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#constat">Le constat</a></li>
+      <li><a href="#methode">La méthode</a></li>
+      <li><a href="#epreuves">Les épreuves</a></li>
+      <li><a href="#avis">Avis</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="#fondateur">Qui suis-je</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a class="btn btn-primary" style="padding:10px 18px;font-size:0.9rem;" href="https://calendly.com/regis-malonga/prise-de-contact" target="_blank" rel="noopener">Audit offert</a></li>
+    </ul>
+    <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">BTS NDRC en alternance</span>
+      <h1>Ta vraie concurrence, ce n'est pas le jury.<br><em>C'est le chronomètre.</em></h1>
+      <p class="lead">Entreprise le jour, cours le soir, vie perso entre les deux : sur l'alternance, le temps est la ressource la plus rare. Avatar Sales Academy transforme tes dernières minutes de libre en entraînement qui compte vraiment — sans fiches, sans bachotage.</p>
+      <div class="hero-cta-row">
+        <a class="btn btn-primary" href="https://calendly.com/regis-malonga/prise-de-contact" target="_blank" rel="noopener">Réserver mon audit offert</a>
+        <a class="btn btn-ghost" href="#methode">Voir la méthode</a>
+      </div>
+      <p class="hero-note">ACCESSIBLE ORDINATEUR, TABLETTE, SMARTPHONE</p>
+    </div>
+    <div class="hud" id="hud">
+      <div class="hud-top">
+        <span class="hud-title">Stats alternant · semaine type</span>
+        <span class="hud-live">en direct</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label"><span>Temps disponible</span><b>Critique</b></div>
+        <div class="meter danger"><i class="m1"></i></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label"><span>Charge mentale</span><b>Élevée</b></div>
+        <div class="meter warn"><i class="m2"></i></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label"><span>Confiance avant l'examen</span><b>Instable</b></div>
+        <div class="meter info"><i class="m3"></i></div>
+      </div>
+      <div class="hud-foot">Objectif : faire remonter <b>Confiance</b> sans faire chuter <b>Temps disponible</b>.</div>
+    </div>
+  </div>
+</section>
+
+<section id="constat">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Le constat</span>
+      <h2>La réalité de l'étudiant en alternance</h2>
+      <p class="lead">Trois contraintes que les méthodes de révision classiques refusent de regarder en face.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <span class="tag">Contrainte 01</span>
+        <h3>Le manque cruel de temps</h3>
+        <p>Entre les exigences de l'entreprise, les cours au CFA et la nécessité de garder une vie personnelle, ton emploi du temps ne laisse presque aucune place à des révisions organisées.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag">Contrainte 02</span>
+        <h3>La charge mentale de l'alternance</h3>
+        <p>Encaisser la pression des objectifs commerciaux en entreprise et l'anxiété de la préparation aux examens en même temps, ça pèse sur la concentration bien avant le jour J.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag">Contrainte 03</span>
+        <h3>Le vrai coût d'un échec</h3>
+        <p>Un échec au BTS, ce n'est pas juste refaire une année. C'est doubler le stress, retarder l'accès à un salaire de diplômé et encaisser un coup sur la confiance en soi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt-bg">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Le point de bascule</span>
+      <h2>Le bachotage a fait son temps</h2>
+      <p class="lead">Relire des fiches en boucle jusqu'à la dernière minute, c'est fait pour retenir des dates — pas pour savoir répondre à une objection en direct.</p>
+    </div>
+    <div class="vs-wrap reveal">
+      <div class="vs-col vs-old">
+        <span class="tag">Méthode classique</span>
+        <h3>Le bachotage</h3>
+        <ul>
+          <li>Relecture passive de fiches et de cours</li>
+          <li>Théorie apprise sans mise en situation</li>
+          <li>Aucun droit à l'erreur avant l'oral</li>
+          <li>Révisions concentrées sur les derniers jours</li>
+          <li>Le stress grimpe, la confiance non</li>
+        </ul>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="vs-col vs-new">
+        <span class="tag">Avatar Sales Academy</span>
+        <h3>L'entraînement par l'immersion</h3>
+        <ul>
+          <li>Serious Games en situation réelle de vente</li>
+          <li>Application immédiate de la théorie</li>
+          <li>Droit à l'erreur illimité, sans conséquence</li>
+          <li>Micro-sessions étalées sur toute l'année</li>
+          <li>Les réflexes s'ancrent, la confiance suit</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="methode">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">La méthode</span>
+      <h2>Apprendre par l'immersion, pas par cœur</h2>
+      <p class="lead">Quatre principes qui font la différence entre "avoir lu" une technique de vente et "savoir la jouer" face à un client.</p>
+    </div>
+    <div class="grid-4">
+      <div class="feature reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div>
+        <h3>Droit à l'erreur</h3>
+        <p>Un environnement virtuel sans risque : rater une vente ou se tromper dans son argumentaire n'a aucune conséquence réelle. Tu dédramatises l'erreur avant le jour J.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 10a8 8 0 0 0-14.6-4.6M4 14a8 8 0 0 0 14.6 4.6"/></svg></div>
+        <h3>Répétition ludique</h3>
+        <p>Défis, récompenses, retours instantanés : l'ancrage se fait naturellement. Tu rejoues un scénario autant de fois qu'il le faut pour que le réflexe devienne automatique.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div>
+        <h3>Parcours personnalisables</h3>
+        <p>Les modules s'adaptent à ton rythme et à l'année en cours, pour cibler exactement les compétences où tu bloques le plus.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <h3>Flexibilité totale</h3>
+        <p>Accessible partout, à tout moment : ordinateur, tablette, smartphone. Entraîne-toi dans les transports ou entre deux rendez-vous, sans perdre une minute libre.</p>
+      </div>
+    </div>
+
+    <div class="gallery reveal">
+      <figure>
+        <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2024/11/vr-1.webp" alt="Serious Game en 3D Avatar Sales Academy" loading="lazy">
+        <figcaption>Serious Games en 3D</figcaption>
+      </figure>
+      <figure>
+        <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2024/11/vr-2.webp" alt="Simulation professionnelle réaliste" loading="lazy">
+        <figcaption>Simulations professionnelles</figcaption>
+      </figure>
+      <figure>
+        <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2025/09/Capture-decran-2025-09-14-181325.png" alt="Bibliothèque de ressources de la plateforme" loading="lazy">
+        <figcaption>Bibliothèque de ressources</figcaption>
+      </figure>
+      <figure>
+        <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2025/09/Capture-decran-2025-09-05-181351.png" alt="Tableau de bord et reporting" loading="lazy">
+        <figcaption>Tableau de bord & reporting</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="video">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin:0 auto 40px;text-align:center;">
+      <span class="eyebrow" style="justify-content:center;">En vidéo</span>
+      <h2 style="margin-top:14px;">Vois la plateforme en action</h2>
+      <p class="lead" style="margin:16px auto 0;">Deux minutes pour comprendre comment le Micro-Learning et la Gamification transforment tes révisions en entraînement qui s'ancre vraiment.</p>
+    </div>
+    <div class="video-wrap reveal">
+      <div class="video-frame">
+        <iframe src="https://www.youtube.com/embed/JOLGAdtSvls" title="Avatar Sales Academy" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="epreuves" class="alt-bg">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Impact direct sur l'examen</span>
+      <h2>Six blocs d'épreuves, un seul objectif : le diplôme</h2>
+      <p class="lead">Le référentiel du BTS NDRC s'articule autour de six épreuves majeures. Chaque module est couvert, avec un renfort immersif particulier sur les épreuves commerciales.</p>
+    </div>
+    <div class="modules">
+      <div class="module-card reveal">
+        <div class="m-head"><span class="m-code">E1</span><h3>Culture générale et expression</h3></div>
+        <p>Méthodologie détaillée, étape par étape, pour réussir la synthèse de documents et l'écriture personnelle.</p>
+      </div>
+      <div class="module-card reveal">
+        <div class="m-head"><span class="m-code">E2</span><h3>Anglais — communication en langue vivante</h3></div>
+        <p>Règles de compréhension écrite, vocabulaire pour structurer ses idées à l'oral, et rappels de grammaire (verbes irréguliers, etc.).</p>
+      </div>
+      <div class="module-card reveal">
+        <div class="m-head"><span class="m-code">E3</span><h3>Culture économique, juridique et managériale</h3></div>
+        <p>Analyse de l'environnement de l'entreprise, rôle régulateur de l'État, droit du travail et choix stratégiques de développement.</p>
+      </div>
+      <div class="module-card is-vente reveal">
+        <div class="m-head"><span class="m-code">E4</span><h3>Relation client et négociation-vente</h3></div>
+        <p>Préparation du dossier professionnel, étapes clés de l'entretien de vente physique et analyse du comportement d'achat.</p>
+      </div>
+      <div class="module-card is-vente reveal">
+        <div class="m-head"><span class="m-code">E5</span><h3>Relation client à distance et digitalisation</h3></div>
+        <p>Création de sites web, animation d'une équipe de téléacteurs, marketing de contenu et gestion omnicanale de la satisfaction client.</p>
+      </div>
+      <div class="module-card is-vente reveal">
+        <div class="m-head"><span class="m-code">E6</span><h3>Relation client et animation de réseaux</h3></div>
+        <p>Stratégies de distribution, organisation de la vente directe, gestion juridique et commerciale des partenariats.</p>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:52px;">
+      <span class="eyebrow">Méthodes et concepts clés couverts</span>
+      <div class="concepts">
+        <span class="concept-chip">Méthode AIDA (e-mail commercial)</span>
+        <span class="concept-chip">CERC (appels entrants)</span>
+        <span class="concept-chip">CROC (appels sortants)</span>
+        <span class="concept-chip">Matrice SWOT</span>
+        <span class="concept-chip">Forces de Porter</span>
+        <span class="concept-chip">Modèle PESTEL</span>
+        <span class="concept-chip">Pyramide de Maslow</span>
+        <span class="concept-chip">Outils CRM</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reussite">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Réussite & motivation</span>
+      <h2>CFA : Sécuriser et faire grimper le taux de réussite</h2>
+      <p class="lead">Au-delà de l'entraînement épreuve par épreuve, la plateforme agit sur les deux leviers qui font vraiment basculer un taux de réussite : le suivi précis et l'engagement dans la durée.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Suivi & conformité</span>
+        <h3>Pilotage Qualiopi automatisé</h3>
+        <p>Relevés de connexion et preuves d'assiduité générés automatiquement : un suivi pédagogique individualisé, conforme aux exigences des OPCO, sans charge administrative supplémentaire.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Ancrage</span>
+        <h3>Mémorisation par répétition espacée</h3>
+        <p>Fini le bachotage de dernière minute. Le micro-learning consolide les notions complexes tout au long de l'année, pour sécuriser durablement les résultats à l'examen.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Motivation</span>
+        <h3>Engagement par le jeu</h3>
+        <p>Badges, classements et challenges maintiennent la motivation et l'assiduité sur toute l'année, là où les décrochages se jouent souvent dans la durée plutôt qu'au premier trimestre.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Pédagogie</span>
+        <h3>Apprentissage actif, pas passif</h3>
+        <p>Les simulations réalistes (négociation, gestion de litige) font vivre les concepts au lieu de les subir : le "Learning by Doing" favorise une appropriation immédiate.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Savoir-être</span>
+        <h3>Développement des soft skills</h3>
+        <p>Profil DISC, écoute active, gestion de conflit : au-delà de la technique de vente, les modules forment des profils complets, prêts pour l'entretien face au jury comme en entreprise.</p>
+      </div>
+      <div class="card reveal">
+        <span class="tag" style="color:var(--reacteur);">Confiance</span>
+        <h3>Un droit à l'erreur qui rassure</h3>
+        <p>Se tromper dans un environnement virtuel avant de se tromper devant un jury ou un client change tout sur la confiance en soi le jour de l'épreuve.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="avis" class="alt-bg">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Ils s'entraînent avec nous</span>
+      <h2>Ce qu'en disent les étudiants</h2>
+      <p class="lead">Quatre exemples de retours-type, à remplacer par tes vrais avis d'étudiants avant mise en ligne.</p>
+    </div>
+    <div class="reviews reveal">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="quote">« Entre l'entreprise et le CFA, je n'avais jamais 2h d'affilée pour réviser. Là je fais un scénario de 10 minutes dans le bus et ça suffit à ancrer le réflexe. »</p>
+        <div class="review-who">
+          <div class="review-avatar">L.</div>
+          <div><div class="name">Lisa, 19 ans</div><div class="role">BTS NDRC en alternance</div></div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="quote">« Avant l'oral E4 je bloquais sur le traitement des objections. Rejouer la même négociation dix fois sans jugement, ça change tout sur la confiance en soi. »</p>
+        <div class="review-who">
+          <div class="review-avatar">Y.</div>
+          <div><div class="name">Yanis, 20 ans</div><div class="role">BTS NDRC en alternance</div></div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="quote">« La méthode SONCAS, je la connaissais par cœur sur le papier mais je ne savais pas m'en servir en direct. Avec les Serious Games, c'est devenu un automatisme. »</p>
+        <div class="review-who">
+          <div class="review-avatar">C.</div>
+          <div><div class="name">Chloé, 21 ans</div><div class="role">BTS NDRC en alternance</div></div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="quote">« Le suivi de progression m'a permis de voir exactement où je perdais des points avant le blanc. J'ai concentré mes révisions dessus au lieu de tout reprendre. »</p>
+        <div class="review-who">
+          <div class="review-avatar">M.</div>
+          <div><div class="name">Mehdi, 19 ans</div><div class="role">BTS NDRC en alternance</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tarifs" class="alt-bg">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Tarifs</span>
+      <h2>Deux façons de s'entraîner</h2>
+      <p class="lead">En solo pour ta prépa perso, ou déployé par ton établissement pour toute une promo.</p>
+    </div>
+    <div class="pricing-tabs reveal">
+      <div class="price-card highlight">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="p-tag">Pack Étudiant</span>
+          <span class="chip" style="background:rgba(0,170,255,0.14);border-color:rgba(0,170,255,0.35);color:var(--reacteur);">14 jours offerts</span>
+        </div>
+        <h3>Prépa individuelle</h3>
+        <p class="p-sub">Ton entraînement perso aux épreuves E1 à E6, à ton rythme.</p>
+        <div class="price-amount"><span class="num">4,99 €</span><span class="per">/ mois</span></div>
+        <div class="price-note">accès individuel, sans engagement — 14 jours offerts à l'inscription</div>
+        <ul class="price-list">
+          <li>Accès individuel à la plateforme</li>
+          <li>Serious Games sur les 6 blocs d'épreuves</li>
+          <li>Accès illimité, rejoue autant que nécessaire</li>
+          <li>Accessible ordinateur, tablette, smartphone</li>
+          <li>Suivi de ta progression en temps réel</li>
+          <li>Formation immersive dédiée aux épreuves E4 à E6</li>
+          <li>Accompagnement IA & support 24/7</li>
+          <li>Conformité RGPD</li>
+        </ul>
+        <a class="btn btn-primary" href="https://avatarsales-academy.learnybox.com/inscription/69a6afa9ca2dai3yknoe5ksazuc8ac2rer/" target="_blank" rel="noopener">Je profite des 14 jours offerts</a>
+      </div>
+      <div class="price-card">
+        <span class="p-tag">Pack CFA / Campus</span>
+        <h3>Sécurisez la réussite de votre promo</h3>
+        <p class="p-sub">Un suivi centralisé qui rassure votre équipe pédagogique et sécurise les résultats de vos apprenants.</p>
+        <div class="price-amount"><span class="num">Dès 250,00 €</span><span class="per">/ mois</span></div>
+        <div class="price-note">10 accès formateurs inclus</div>
+        <ul class="price-list">
+          <li>Jusqu'à 300 apprenants</li>
+          <li>Statistiques</li>
+          <li>Personnalisation des parcours</li>
+          <li>Quiz Kahoot! intégrés</li>
+          <li>Accompagnement IA & support 24/7</li>
+          <li>Tableau de bord & preuves d'assiduité</li>
+          <li>Conformité RGPD</li>
+        </ul>
+        <a class="btn btn-ghost" href="https://calendly.com/regis-malonga/prise-de-contact" target="_blank" rel="noopener">Demander une démo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="fondateur">
+  <div class="wrap" style="max-width:760px;">
+    <div class="founder-text reveal">
+      <span class="eyebrow">Une pédagogie ancrée dans le vécu</span>
+      <h2 style="margin-top:14px;">Conçu par quelqu'un qui a vécu l'alternance</h2>
+      <p class="lead">Régis Malonga, fondateur d'Avatar Sales Academy, a passé 17 ans sur le terrain de la vente B2B avant de se consacrer à la pédagogie. Il enseigne aujourd'hui les Soft Skills et les méthodes de vente en école de commerce.</p>
+      <blockquote>« J'ai moi-même été en alternance, et je connais l'investissement personnel que demande ce diplôme. C'est pour ça que chaque scénario est pensé pour résonner avec ta réalité — pas avec une théorie hors-sol. »</blockquote>
+      <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2025/09/Cest-quoi-la-gamification-78.png" alt="Principe de la gamification chez Avatar Sales Academy" style="border-radius:14px;border:1px solid var(--ligne);margin-top:26px;" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="alt-bg">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Questions fréquentes</span>
+      <h2>Avant de te lancer</h2>
+    </div>
+    <div class="faq reveal">
+      <details open>
+        <summary>C'est quoi concrètement, un Serious Game de vente ?</summary>
+        <p>Une simulation à embranchements où tu es le protagoniste : chaque choix, bon ou mauvais, a une conséquence immédiate sur le dialogue et sur ton score. Tu apprends en faisant, pas en lisant.</p>
+      </details>
+      <details>
+        <summary>Est-ce que ça remplace les cours du CFA ?</summary>
+        <p>Non. Ça vient en complément : les cours posent la théorie, les Serious Games te font vivre son application concrète pour que le réflexe s'installe avant l'examen.</p>
+      </details>
+      <details>
+        <summary>Combien de temps ça prend chaque semaine ?</summary>
+        <p>Les sessions sont pensées en micro-learning : quelques minutes suffisent pour rejouer un scénario, ce qui les rend compatibles avec un emploi du temps d'alternant.</p>
+      </details>
+      <details>
+        <summary>C'est accessible depuis mon téléphone ?</summary>
+        <p>Oui. La plateforme fonctionne sur ordinateur, tablette et smartphone, pour t'entraîner dans les transports ou entre deux rendez-vous.</p>
+      </details>
+      <details>
+        <summary>Mon CFA ne propose pas encore Avatar Sales Academy, je fais comment ?</summary>
+        <p>Réserve un audit offert : on regarde ensemble comment t'entraîner dès maintenant, et comment en parler à ton établissement s'il n'est pas encore équipé.</p>
+      </details>
+      <details>
+        <summary>Quelle différence entre le Pack Étudiant et le Pack Campus ?</summary>
+        <p>Le Pack Étudiant est un accès individuel pour ta prépa personnelle. Le Pack Campus est pensé pour un CFA ou une école : plusieurs accès formateurs, jusqu'à 300 apprenants suivis, et un tableau de bord centralisé pour tout le groupe.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap">
+    <span class="eyebrow">Prêt à passer au niveau supérieur ?</span>
+    <h2>Arrête de bachoter.<br>Commence à t'entraîner.</h2>
+    <p>Un échange rapide pour comprendre ta situation d'alternant et voir comment intégrer l'entraînement immersif dans ton emploi du temps — sans effort technique.</p>
+    <div class="hero-cta-row">
+      <a class="btn btn-primary" href="https://calendly.com/regis-malonga/prise-de-contact" target="_blank" rel="noopener">Réserver mon audit offert</a>
+      <a class="btn btn-ghost" href="mailto:contact@avatar-sales-academy.com">Écrire un email</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="reveal" style="margin-bottom:44px;">
+      <p style="text-align:center;font-family:'JetBrains Mono';font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--craie-faible);margin-bottom:20px;">Nos partenaires de confiance</p>
+      <div class="partners-strip">
+        <div style="background:#fff;border-radius:10px;padding:14px 20px;display:flex;align-items:center;"><img src="assets/logo-learnybox.png" alt="Learnybox" loading="lazy" style="height:26px;width:auto;filter:none;opacity:1;"></div>
+        <div style="background:#fff;border-radius:10px;padding:14px 20px;display:flex;align-items:center;"><img src="assets/logo-made-in-95.jpg" alt="Made in 95 - Val d'Oise" loading="lazy" style="height:44px;width:auto;filter:none;opacity:1;"></div>
+        <div style="background:#fff;border-radius:10px;padding:14px 20px;display:flex;align-items:center;"><img src="assets/logo-serious-factory.png" alt="Serious Factory" loading="lazy" style="height:30px;width:auto;filter:none;opacity:1;"></div>
+      </div>
+    </div>
+    <div class="foot-grid">
+      <div style="max-width:280px;">
+        <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2024/04/asa-footer-1.webp" alt="Avatar Sales Academy" style="height:40px;width:auto;margin-bottom:14px;" loading="lazy">
+        <p style="color:var(--craie-faible);font-size:0.9rem;margin:0 0 16px;">Pédagogie immersive pour les métiers de la vente — Serious Games et Micro-Learning pour CFA, écoles et alternants.</p>
+        <div class="badges-row">
+          <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2024/10/rgpd.webp" alt="Conforme RGPD" loading="lazy">
+          <img src="https://www.avatar-sales-academy.com/wp-content/uploads/2024/10/Hebergementt.webp" alt="Hébergement France" loading="lazy">
+        </div>
+      </div>
+      <ul class="foot-links">
+        <li><a href="#constat">Le constat</a></li>
+        <li><a href="#methode">La méthode</a></li>
+        <li><a href="#epreuves">Les épreuves</a></li>
+        <li><a href="#tarifs">Tarifs</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <ul class="foot-links">
+        <li><a href="mailto:contact@avatar-sales-academy.com">contact@avatar-sales-academy.com</a></li>
+        <li><a href="http://www.linkedin.com/in/regis-malonga" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://www.youtube.com/@AVATARSALESACADEMY" target="_blank" rel="noopener">Youtube</a></li>
+      </ul>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Avatar Sales Academy. Tous droits réservés.</span>
+      <span><a href="https://www.avatar-sales-academy.com/mentions-legales/" target="_blank" rel="noopener">Mentions légales</a> · <a href="https://www.avatar-sales-academy.com/politique-de-confidentialite/" target="_blank" rel="noopener">Confidentialité</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu
+  const burger = document.getElementById('burgerBtn');
+  const navLinks = document.getElementById('navLinks');
+  burger.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+  }));
+
+  // Reveal on scroll
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // HUD meters fill once visible
+  const hud = document.getElementById('hud');
+  const hudIo = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        hud.classList.add('in-view');
+        hudIo.unobserve(hud);
+      }
+    });
+  }, { threshold: 0.4 });
+  hudIo.observe(hud);
+</script>
+</body>
+</html>
