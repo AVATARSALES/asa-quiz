@@ -229,7 +229,18 @@ async function init() {
     ];
   }
   // Fix encoding on all learner names
+  // Fix encoding
   scores.forEach(function(s) { s.learner = fixEncoding(s.learner); });
+  // Client-side dedup: même apprenant + même module + même score dans 5 min = garder 1 seul
+  var deduped = [];
+  scores.forEach(function(s) {
+    var dominated = deduped.some(function(d) {
+      return d.learner === s.learner && d.module === s.module && d.score === s.score &&
+             Math.abs(new Date(d.timestamp) - new Date(s.timestamp)) < 300000;
+    });
+    if (!dominated) deduped.push(s);
+  });
+  scores = deduped;
   buildUI();
 }
 
