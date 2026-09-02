@@ -70,6 +70,8 @@
   .lb-card .title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:16px 16px 12px}
   .lb-select{margin:0 16px 12px;padding:8px 12px;border:2px solid #E5E7EB;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;color:var(--navy);background:var(--bg);width:calc(100% - 32px);cursor:pointer}
   .lb-select:focus{outline:none;border-color:var(--gold)}
+  .lb-rank-summary{margin:0 16px 12px;padding:10px 14px;background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:10px;color:#fff;font-size:13px;font-weight:600;text-align:center}
+  .lb-rank-summary .rank-num{font-size:22px;font-weight:800;color:var(--gold)}
   .lb-row{display:flex;align-items:center;padding:12px 16px;gap:12px;border-top:1px solid #F3F4F6}
   .lb-row.top1{background:linear-gradient(90deg,#FFF9E6,#FFFFFF)}
   .lb-row.top2{background:linear-gradient(90deg,#F5F5F5,#FFFFFF)}
@@ -104,7 +106,6 @@
       <div class="tab active" data-tab="progress">📊 Ma progression</div>
       <div class="tab" data-tab="challenge">🏆 Challenge</div>
     </div>
-
     <div id="tabProgress">
       <div class="selector">
         <div class="avatar" id="avatarInitial">?</div>
@@ -141,15 +142,16 @@
         <div id="actList"></div>
       </div>
     </div>
-
     <div id="tabChallenge" class="hidden">
       <div class="lb-card">
         <div class="title">🏆 Classement par module — Meilleur score</div>
         <select class="lb-select" id="lbModuleSelect"></select>
+        <div class="lb-rank-summary" id="lbRankModule"></div>
         <div id="lbList"></div>
       </div>
       <div class="lb-card">
         <div class="title">🌟 Classement général — Score moyen</div>
+        <div class="lb-rank-summary" id="lbRankGlobal"></div>
         <div id="lbGlobal"></div>
       </div>
     </div>
@@ -161,193 +163,222 @@
 const URL_API = "https://script.google.com/macros/s/AKfycbxtJfHhsOU_Gw09zNfj6AnkAgk9hMhQZI5x6Jz7n41DnYUbLYptqZA0ZaXwarDz8TTV/exec";
 let scores=[], chart=null, currentLearner="";
 
-// ── Anonymiser : "Amélie Dupont" → "Amélie D." ──
-function anon(name){
-  if(!name) return "Anonyme";
-  const parts=name.trim().split(/\s+/);
-  if(parts.length<2) return parts[0];
-  return parts[0]+" "+parts[parts.length-1][0]+".";
+// ── Fix encodage UTF-8 (Learnybox envoie en Latin-1) ──
+function fixEncoding(str) {
+  if (!str) return "Anonyme";
+  try {
+    // Tente de décoder le double-encodage UTF-8
+    var decoded = decodeURIComponent(escape(str));
+    // Si ça a changé, on réessaie une fois (triple encodage possible)
+    if (decoded !== str) {
+      try { decoded = decodeURIComponent(escape(decoded)); } catch(e2) {}
+    }
+    return decoded;
+  } catch(e) {
+    // Fallback : nettoyage basique des séquences cassées courantes
+    return str
+      .replace(/Ã©/g, 'é').replace(/Ã¨/g, 'è').replace(/Ã /g, 'à')
+      .replace(/Ã®/g, 'î').replace(/Ã´/g, 'ô').replace(/Ã¢/g, 'â')
+      .replace(/Ã§/g, 'ç').replace(/Ã«/g, 'ë').replace(/Ã¯/g, 'ï')
+      .replace(/Ã¹/g, 'ù').replace(/Ãª/g, 'ê').replace(/Ã»/g, 'û')
+      .replace(/Ã¼/g, 'ü').replace(/Å"/g, 'œ').replace(/Ã¶/g, 'ö')
+      .replace(/Ã‰/g, 'É').replace(/Ãˆ/g, 'È').replace(/Ã€/g, 'À')
+      .replace(/RÃ.{1,20}gis/gi, 'Régis')
+      .replace(/[Ã¢€™Æ'šÂ,]+/g, '')
+      .trim();
+  }
 }
 
-function parseTime(t){
-  if(!t) return 0;
-  const m=t.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if(!m) return 0;
+function anon(name) {
+  var clean = fixEncoding(name);
+  if (!clean || clean === "Anonyme") return "Anonyme";
+  var parts = clean.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0];
+  return parts[0] + " " + parts[parts.length-1][0] + ".";
+}
+
+function ordinal(n) {
+  if (n === 1) return "1er";
+  return n + "ème";
+}
+
+function parseTime(t) {
+  if (!t) return 0;
+  var m = t.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
   return (parseInt(m[1]||0)*3600)+(parseInt(m[2]||0)*60)+parseInt(m[3]||0);
 }
-function fmtTime(sec){
-  if(sec<60) return sec+"s";
-  if(sec<3600) return Math.floor(sec/60)+"m"+String(sec%60).padStart(2,"0")+"s";
+function fmtTime(sec) {
+  if (sec<60) return sec+"s";
+  if (sec<3600) return Math.floor(sec/60)+"m"+String(sec%60).padStart(2,"0")+"s";
   return Math.floor(sec/3600)+"h"+String(Math.floor((sec%3600)/60)).padStart(2,"0");
 }
 
-async function init(){
-  try{
-    const r=await fetch(URL_API+"?action=dashboard");
-    const j=await r.json();
-    scores=j.scorm||[];
-  }catch(e){
-    scores=[
+async function init() {
+  try {
+    var r = await fetch(URL_API+"?action=dashboard");
+    var j = await r.json();
+    scores = j.scorm || [];
+  } catch(e) {
+    scores = [
       {timestamp:"2026-08-28T13:03:44Z",module:"QUIZ MATRICE EISENHOWER",learner:"Régis Malonga",score:65,max:80,pct:0.813,time:"PT00H01M39S"},
       {timestamp:"2026-08-29T09:15:00Z",module:"QUIZ MATRICE EISENHOWER",learner:"Amélie Dupont",score:55,max:80,pct:0.688,time:"PT00H02M10S"},
       {timestamp:"2026-08-29T09:30:00Z",module:"OBJECTION NINJA",learner:"Amélie Dupont",score:72,max:100,pct:0.72,time:"PT00H08M45S"},
-      {timestamp:"2026-08-29T10:00:00Z",module:"QUIZ MATRICE EISENHOWER",learner:"Lucas Martin",score:40,max:80,pct:0.50,time:"PT00H03M00S"},
       {timestamp:"2026-08-30T14:00:00Z",module:"QUIZ MATRICE EISENHOWER",learner:"Lucas Martin",score:70,max:80,pct:0.875,time:"PT00H01M50S"},
       {timestamp:"2026-08-30T14:15:00Z",module:"OBJECTION NINJA",learner:"Lucas Martin",score:85,max:100,pct:0.85,time:"PT00H07M20S"},
-      {timestamp:"2026-08-31T09:00:00Z",module:"DIGITALISER L'ARTISAN",learner:"Lucas Martin",score:78,max:100,pct:0.78,time:"PT00H06M15S"},
     ];
   }
+  // Fix encoding on all learner names
+  scores.forEach(function(s) { s.learner = fixEncoding(s.learner); });
   buildUI();
 }
 
-document.querySelectorAll(".tab").forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+document.querySelectorAll(".tab").forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active")});
     tab.classList.add("active");
-    const id=tab.dataset.tab;
-    document.getElementById("tabProgress").classList.toggle("hidden",id!=="progress");
-    document.getElementById("tabChallenge").classList.toggle("hidden",id!=="challenge");
-    if(id==="challenge") renderLeaderboard();
+    var id = tab.dataset.tab;
+    document.getElementById("tabProgress").classList.toggle("hidden", id!=="progress");
+    document.getElementById("tabChallenge").classList.toggle("hidden", id!=="challenge");
+    if (id==="challenge") renderLeaderboard();
   });
 });
 
-function buildUI(){
-  // Unique learners (full names for internal matching)
-  const names=[...new Set(scores.map(r=>r.learner))].sort();
-  if(!names.length){document.getElementById("loading").innerHTML='<div class="empty">Aucun score enregistré</div>';return}
-
-  const sel=document.getElementById("sel");
-  sel.innerHTML=names.map(n=>'<option value="'+n+'">'+anon(n)+'</option>').join("");
-  const pre=new URLSearchParams(location.search).get("apprenant");
-  if(pre){
-    // Match by full name OR anonymized name
-    const match=names.find(n=>n===pre||anon(n)===pre||n.split(" ")[0]===pre);
-    if(match) sel.value=match;
+function buildUI() {
+  var names = [...new Set(scores.map(function(r){return r.learner}))].sort();
+  if (!names.length) { document.getElementById("loading").innerHTML='<div class="empty">Aucun score enregistré</div>'; return; }
+  var sel = document.getElementById("sel");
+  sel.innerHTML = names.map(function(n){return '<option value="'+n+'">'+anon(n)+'</option>'}).join("");
+  var pre = new URLSearchParams(location.search).get("apprenant");
+  if (pre) {
+    var match = names.find(function(n){return n===pre || fixEncoding(n)===pre || anon(n)===pre || n.split(" ")[0]===pre || fixEncoding(n).split(" ")[0]===pre});
+    if (match) sel.value = match;
   }
-  sel.addEventListener("change",()=>{currentLearner=sel.value;render(sel.value)});
-
-  const modules=[...new Set(scores.map(r=>r.module))].sort();
-  const lbSel=document.getElementById("lbModuleSelect");
-  lbSel.innerHTML=modules.map(m=>'<option value="'+m+'">'+m+'</option>').join("");
-  lbSel.addEventListener("change",()=>renderLeaderboard());
-
+  sel.addEventListener("change", function(){currentLearner=sel.value; render(sel.value)});
+  var modules = [...new Set(scores.map(function(r){return r.module}))].sort();
+  var lbSel = document.getElementById("lbModuleSelect");
+  lbSel.innerHTML = modules.map(function(m){return '<option value="'+m+'">'+m+'</option>'}).join("");
+  lbSel.addEventListener("change", function(){renderLeaderboard()});
   document.getElementById("loading").style.display="none";
   document.getElementById("app").classList.remove("hidden");
-  currentLearner=sel.value;
+  currentLearner = sel.value;
   render(sel.value);
 }
 
-function render(name){
-  const displayName=anon(name);
-  const initials=name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
-  document.getElementById("avatarInitial").textContent=initials;
-
-  const rows=scores.filter(r=>r.learner===name&&r.pct>0).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-  const avg=rows.length?rows.reduce((s,r)=>s+r.pct,0)/rows.length:0;
-  const pct=Math.round(avg*100);
-
-  const ring=document.getElementById("ring");
-  ring.style.strokeDashoffset=314.16-(314.16*avg);
-  ring.style.stroke=avg>=0.8?"#10B981":avg>=0.6?"#D4A843":avg>=0.4?"#F59E0B":"#EF4444";
-  document.getElementById("pctVal").textContent=pct+"%";
-
-  const badge=document.getElementById("badge");
-  badge.className="level-badge";
+function render(name) {
+  var displayName = anon(name);
+  var cleanName = fixEncoding(name);
+  var initials = cleanName.split(" ").map(function(w){return w[0]}).join("").slice(0,2).toUpperCase();
+  document.getElementById("avatarInitial").textContent = initials;
+  var rows = scores.filter(function(r){return r.learner===name && r.pct>0}).sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp)});
+  var avg = rows.length ? rows.reduce(function(s,r){return s+r.pct},0)/rows.length : 0;
+  var ring = document.getElementById("ring");
+  ring.style.strokeDashoffset = 314.16-(314.16*avg);
+  ring.style.stroke = avg>=0.8?"#10B981":avg>=0.6?"#D4A843":avg>=0.4?"#F59E0B":"#EF4444";
+  document.getElementById("pctVal").textContent = Math.round(avg*100)+"%";
+  var badge = document.getElementById("badge");
+  badge.className = "level-badge";
   if(avg>=0.8){badge.textContent="🟢 Maîtrise";badge.classList.add("green")}
   else if(avg>=0.6){badge.textContent="🟡 Acquis";badge.classList.add("yellow")}
   else if(avg>=0.4){badge.textContent="🟠 En cours";badge.classList.add("orange")}
   else{badge.textContent="🔴 À renforcer";badge.classList.add("red")}
-
-  const uniq=[...new Set(rows.map(r=>r.module))];
-  const lastDate=rows.length?new Date(rows[rows.length-1].timestamp).toLocaleDateString("fr-FR",{day:"2-digit",month:"long"}):"—";
-  document.getElementById("metaInfo").innerHTML="<strong>"+rows.length+"</strong> session"+(rows.length>1?"s":"")+" sur <strong>"+uniq.length+"</strong> module"+(uniq.length>1?"s":"")+"<br>Dernier : "+lastDate;
-
-  document.getElementById("sModules").textContent=uniq.length;
-  document.getElementById("sBest").textContent=(rows.length?Math.round(Math.max(...rows.map(r=>r.pct))*100):0)+"%";
-
-  const totalSec=rows.reduce((s,r)=>s+parseTime(r.time),0);
-  document.getElementById("sTime").textContent=fmtTime(totalSec);
-
-  let delta=0;
-  if(rows.length>=2){
-    const h=Math.ceil(rows.length/2);
-    delta=rows.slice(h).reduce((s,r)=>s+r.pct,0)/(rows.length-h)-rows.slice(0,h).reduce((s,r)=>s+r.pct,0)/h;
-  }
-  document.getElementById("sDelta").textContent=(delta>=0?"+":"")+Math.round(delta*100)+"%";
-  const arrow=document.getElementById("sDeltaArrow");
-  arrow.textContent=delta>0?"▲ hausse":delta<0?"▼ baisse":"— stable";
-  arrow.className="delta "+(delta>0?"up":delta<0?"down":"flat");
-
+  var uniq = [...new Set(rows.map(function(r){return r.module}))];
+  var lastDate = rows.length ? new Date(rows[rows.length-1].timestamp).toLocaleDateString("fr-FR",{day:"2-digit",month:"long"}) : "—";
+  document.getElementById("metaInfo").innerHTML = "<strong>"+rows.length+"</strong> session"+(rows.length>1?"s":"")+" sur <strong>"+uniq.length+"</strong> module"+(uniq.length>1?"s":"")+"<br>Dernier : "+lastDate;
+  document.getElementById("sModules").textContent = uniq.length;
+  document.getElementById("sBest").textContent = (rows.length?Math.round(Math.max.apply(null,rows.map(function(r){return r.pct}))*100):0)+"%";
+  var totalSec = rows.reduce(function(s,r){return s+parseTime(r.time)},0);
+  document.getElementById("sTime").textContent = fmtTime(totalSec);
+  var delta = 0;
+  if(rows.length>=2){var h=Math.ceil(rows.length/2);delta=rows.slice(h).reduce(function(s,r){return s+r.pct},0)/(rows.length-h)-rows.slice(0,h).reduce(function(s,r){return s+r.pct},0)/h}
+  document.getElementById("sDelta").textContent = (delta>=0?"+":"")+Math.round(delta*100)+"%";
+  var arrow = document.getElementById("sDeltaArrow");
+  arrow.textContent = delta>0?"▲ hausse":delta<0?"▼ baisse":"— stable";
+  arrow.className = "delta "+(delta>0?"up":delta<0?"down":"flat");
   renderChart(rows);
-
-  const recent=[...rows].reverse().slice(0,5);
-  const list=document.getElementById("actList");
+  var recent = rows.slice().reverse().slice(0,5);
+  var list = document.getElementById("actList");
   if(!recent.length){list.innerHTML='<div class="empty">Aucune activité</div>';return}
-  list.innerHTML=recent.map(r=>{
-    const p=Math.round(r.pct*100),cls=p>=75?"high":p>=50?"mid":"low";
-    const d=new Date(r.timestamp);
-    const ds=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})+" · "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-    const tm=parseTime(r.time);
+  list.innerHTML = recent.map(function(r){
+    var p=Math.round(r.pct*100),cls=p>=75?"high":p>=50?"mid":"low";
+    var d=new Date(r.timestamp);
+    var ds=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})+" · "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    var tm=parseTime(r.time);
     return '<div class="act-row"><div class="act-icon">🕹️</div><div class="act-info"><div class="name">'+r.module+'</div><div class="date">'+ds+' · '+r.score+'/'+r.max+(tm?" · "+fmtTime(tm):"")+'</div></div><div class="act-score '+cls+'">'+p+'%</div></div>';
   }).join("");
 }
 
-function renderChart(rows){
-  const ctx=document.getElementById("chart");
+function renderChart(rows) {
+  var ctx = document.getElementById("chart");
   if(chart)chart.destroy();
-  const labels=rows.map(r=>new Date(r.timestamp).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}));
-  const data=rows.map(r=>Math.round(r.pct*100));
-  const gradient=ctx.getContext("2d").createLinearGradient(0,0,0,180);
-  gradient.addColorStop(0,"rgba(212,168,67,0.3)");
-  gradient.addColorStop(1,"rgba(212,168,67,0.02)");
-  chart=new Chart(ctx,{
-    type:"line",
-    data:{labels,datasets:[{label:"Score %",data,borderColor:"#D4A843",backgroundColor:gradient,borderWidth:3,pointBackgroundColor:"#0D1B35",pointBorderColor:"#D4A843",pointBorderWidth:2,pointRadius:5,pointHoverRadius:7,fill:true,tension:0.35}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0D1B35",titleFont:{family:"Inter",weight:"600"},bodyFont:{family:"Inter"},cornerRadius:10,padding:12,callbacks:{label:function(c){const r=rows[c.dataIndex];const tm=parseTime(r.time);return " "+c.parsed.y+"% — "+r.score+"/"+r.max+(tm?" · "+fmtTime(tm):"")}}}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+"%",font:{family:"Inter",size:11,weight:"500"},color:"#8B92A5"},grid:{color:"#F0F2F5"}},x:{ticks:{font:{family:"Inter",size:11},color:"#8B92A5"},grid:{display:false}}},animation:{duration:800,easing:"easeOutQuart"}}
-  });
+  var labels = rows.map(function(r){return new Date(r.timestamp).toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})});
+  var data = rows.map(function(r){return Math.round(r.pct*100)});
+  var gradient = ctx.getContext("2d").createLinearGradient(0,0,0,180);
+  gradient.addColorStop(0,"rgba(212,168,67,0.3)");gradient.addColorStop(1,"rgba(212,168,67,0.02)");
+  chart = new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"Score %",data:data,borderColor:"#D4A843",backgroundColor:gradient,borderWidth:3,pointBackgroundColor:"#0D1B35",pointBorderColor:"#D4A843",pointBorderWidth:2,pointRadius:5,pointHoverRadius:7,fill:true,tension:0.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0D1B35",titleFont:{family:"Inter",weight:"600"},bodyFont:{family:"Inter"},cornerRadius:10,padding:12,callbacks:{label:function(c){var r=rows[c.dataIndex];var tm=parseTime(r.time);return " "+c.parsed.y+"% — "+r.score+"/"+r.max+(tm?" · "+fmtTime(tm):"")}}}},scales:{y:{min:0,max:100,ticks:{callback:function(v){return v+"%"},font:{family:"Inter",size:11,weight:"500"},color:"#8B92A5"},grid:{color:"#F0F2F5"}},x:{ticks:{font:{family:"Inter",size:11},color:"#8B92A5"},grid:{display:false}}},animation:{duration:800,easing:"easeOutQuart"}}});
 }
 
-// ═══ LEADERBOARD ═══
-function renderLeaderboard(){
-  const mod=document.getElementById("lbModuleSelect").value;
-  const medals=["🥇","🥈","🥉"];
+function renderLeaderboard() {
+  var mod = document.getElementById("lbModuleSelect").value;
+  var medals = ["🥇","🥈","🥉"];
 
-  // Per-module: best score per learner
-  const byLearner={};
-  scores.filter(r=>r.module===mod&&r.pct>0).forEach(r=>{
-    if(!byLearner[r.learner]||r.pct>byLearner[r.learner].pct) byLearner[r.learner]=r;
+  // Per-module leaderboard
+  var byLearner = {};
+  scores.filter(function(r){return r.module===mod && r.pct>0}).forEach(function(r){
+    if(!byLearner[r.learner] || r.pct>byLearner[r.learner].pct) byLearner[r.learner]=r;
   });
-  const ranked=Object.values(byLearner).sort((a,b)=>b.pct-a.pct);
+  var ranked = Object.values(byLearner).sort(function(a,b){return b.pct-a.pct});
+  var myRankMod = ranked.findIndex(function(r){return r.learner===currentLearner}) + 1;
+  var totalMod = ranked.length;
 
-  const lbList=document.getElementById("lbList");
+  // Rank summary module
+  var summaryMod = document.getElementById("lbRankModule");
+  if (myRankMod > 0) {
+    summaryMod.innerHTML = 'Tu es <span class="rank-num">' + ordinal(myRankMod) + '</span> sur ' + totalMod + ' participant' + (totalMod>1?'s':'');
+  } else {
+    summaryMod.innerHTML = totalMod + ' participant' + (totalMod>1?'s':'') + ' sur ce module';
+  }
+
+  var lbList = document.getElementById("lbList");
   if(!ranked.length){lbList.innerHTML='<div class="empty">Aucun score pour ce module</div>';return}
-  lbList.innerHTML=ranked.map((r,i)=>{
-    const p=Math.round(r.pct*100),tm=parseTime(r.time);
-    const isMe=r.learner===currentLearner;
-    const topClass=i<3?" top"+(i+1):"";
-    const meClass=isMe?" me":"";
-    const rankClass=i<3?" r"+(i+1):" other";
-    return '<div class="lb-row'+topClass+meClass+'"><div class="lb-rank'+rankClass+'">'+(i<3?medals[i]:(i+1))+'</div><div class="lb-name">'+anon(r.learner)+(isMe?' <span style="font-size:10px;color:var(--gold);font-weight:700">← TOI</span>':"")+'</div><div class="lb-score">'+p+'%</div>'+(tm?'<div class="lb-time">'+fmtTime(tm)+'</div>':'')+'</div>';
+  lbList.innerHTML = ranked.map(function(r,i){
+    var p=Math.round(r.pct*100),tm=parseTime(r.time);
+    var isMe = r.learner===currentLearner;
+    var topClass = i<3?" top"+(i+1):"";
+    var meClass = isMe?" me":"";
+    var rankClass = i<3?" r"+(i+1):" other";
+    var rankLabel = i<3 ? medals[i] : (i+1);
+    return '<div class="lb-row'+topClass+meClass+'"><div class="lb-rank'+rankClass+'">'+rankLabel+'</div><div class="lb-name">'+anon(r.learner)+(isMe?' <span style="font-size:10px;color:var(--gold);font-weight:700">← TOI</span>':"")+'</div><div class="lb-score">'+p+'%</div>'+(tm?'<div class="lb-time">'+fmtTime(tm)+'</div>':'')+'</div>';
   }).join("");
 
-  // Global: avg score per learner
-  const globalByLearner={};
-  scores.filter(r=>r.pct>0).forEach(r=>{
+  // Global leaderboard
+  var globalByLearner = {};
+  scores.filter(function(r){return r.pct>0}).forEach(function(r){
     if(!globalByLearner[r.learner]) globalByLearner[r.learner]={total:0,count:0,totalTime:0};
     globalByLearner[r.learner].total+=r.pct;
     globalByLearner[r.learner].count++;
     globalByLearner[r.learner].totalTime+=parseTime(r.time);
   });
-  const globalRanked=Object.entries(globalByLearner).map(([name,d])=>({
-    learner:name,avg:d.total/d.count,count:d.count,totalTime:d.totalTime
-  })).sort((a,b)=>b.avg-a.avg);
+  var globalRanked = Object.entries(globalByLearner).map(function(e){
+    return {learner:e[0],avg:e[1].total/e[1].count,count:e[1].count,totalTime:e[1].totalTime};
+  }).sort(function(a,b){return b.avg-a.avg});
 
-  document.getElementById("lbGlobal").innerHTML=globalRanked.map((r,i)=>{
-    const p=Math.round(r.avg*100),isMe=r.learner===currentLearner;
-    const topClass=i<3?" top"+(i+1):"";
-    const meClass=isMe?" me":"";
-    const rankClass=i<3?" r"+(i+1):" other";
-    return '<div class="lb-row'+topClass+meClass+'"><div class="lb-rank'+rankClass+'">'+(i<3?medals[i]:(i+1))+'</div><div class="lb-name">'+anon(r.learner)+(isMe?' <span style="font-size:10px;color:var(--gold);font-weight:700">← TOI</span>':"")+' <span style="font-size:11px;color:#8B92A5;font-weight:400">'+r.count+' sessions · '+fmtTime(r.totalTime)+'</span></div><div class="lb-score">'+p+'%</div></div>';
+  var myRankGlobal = globalRanked.findIndex(function(r){return r.learner===currentLearner}) + 1;
+  var totalGlobal = globalRanked.length;
+
+  var summaryGlobal = document.getElementById("lbRankGlobal");
+  if (myRankGlobal > 0) {
+    summaryGlobal.innerHTML = 'Tu es <span class="rank-num">' + ordinal(myRankGlobal) + '</span> sur ' + totalGlobal + ' participant' + (totalGlobal>1?'s':'');
+  } else {
+    summaryGlobal.innerHTML = totalGlobal + ' participant' + (totalGlobal>1?'s':'');
+  }
+
+  document.getElementById("lbGlobal").innerHTML = globalRanked.map(function(r,i){
+    var p=Math.round(r.avg*100),isMe=r.learner===currentLearner;
+    var topClass=i<3?" top"+(i+1):"";var meClass=isMe?" me":"";
+    var rankClass=i<3?" r"+(i+1):" other";
+    var rankLabel=i<3?medals[i]:(i+1);
+    return '<div class="lb-row'+topClass+meClass+'"><div class="lb-rank'+rankClass+'">'+rankLabel+'</div><div class="lb-name">'+anon(r.learner)+(isMe?' <span style="font-size:10px;color:var(--gold);font-weight:700">← TOI</span>':"")+' <span style="font-size:11px;color:#8B92A5;font-weight:400">'+r.count+' sessions · '+fmtTime(r.totalTime)+'</span></div><div class="lb-score">'+p+'%</div></div>';
   }).join("");
 }
 
