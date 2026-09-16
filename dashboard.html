@@ -151,7 +151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
     <div class="form-group"><label>Token d'accès</label><input type="password" id="loginToken" placeholder="Votre token personnel"></div>
     <button class="login-btn" id="loginBtn" onclick="handleLogin()">Accéder au dashboard</button>
     <div class="login-error" id="loginError"></div>
-    <div class="login-demo">Mode démo :<br>Apprenant : <code>marie@demo.fr</code> / <code>demo123</code><br>Formateur : <code>coach@demo.fr</code> / <code>demo456</code></div>
+
   </div>
 </div>
 
@@ -218,44 +218,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
 
 <script>
 // ═══════════ CONFIG ═══════════
-const API_URL = null; // "https://script.google.com/macros/s/.../exec"
+const API_URL = "https://script.google.com/macros/s/AKfycbxtJfHhsOU_Gw09zNfj6AnkAgk9hMhQZI5x6Jz7n41DnYUbLYptqZA0ZaXwarDz8TTV/exec";
 
 // ═══════════ STATE ═══════════
 let currentUser = null;    // full user payload
 let chartInstances = [];   // for cleanup
 
-// ═══════════ DEMO ═══════════
-const DEMO_TOKENS = {
-  "tok_marie_abc123": {
-    role:"apprenant",nom:"Marie Dupont",
-    data:{scoresMoyens:72,modulesJoues:9,modulesTotal:13,niveau:"Intermédiaire",progression:69,
-      modules:[
-        {nom:"Découverte besoin",score:85,date:"2026-08-12"},{nom:"SPIN Situation",score:78,date:"2026-08-19"},
-        {nom:"SPIN Problème",score:65,date:"2026-08-26"},{nom:"SPIN Implication",score:70,date:"2026-09-01"},
-        {nom:"SPIN Need-payoff",score:82,date:"2026-09-03"},{nom:"Traitement objections",score:55,date:"2026-09-05"},
-        {nom:"Closing",score:68,date:"2026-09-08"},{nom:"Négociation",score:74,date:"2026-09-11"},
-        {nom:"Pitch commercial",score:71,date:"2026-09-14"}],
-      classement:[{nom:"Vous (Marie)",score:72,vous:true},{nom:"Lucas M.",score:80},{nom:"Sarah K.",score:76},{nom:"Amine B.",score:68},{nom:"Chloé R.",score:64}]}
-  },
-  "tok_coach_xyz789": {
-    role:"formateur",nom:"Coach Martin",
-    data:{nbApprenants:24,scoreMoyen:71,tauxCompletion:65,modulesActifs:13,
-      apprenants:[
-        {nom:"Marie Dupont",email:"m.dupont@mail.fr",score:72,modules:"9/13",niveau:"Intermédiaire",progression:69,lastDate:"2026-09-14"},
-        {nom:"Lucas Martin",email:"l.martin@mail.fr",score:80,modules:"11/13",niveau:"Avancé",progression:85,lastDate:"2026-09-13"},
-        {nom:"Sarah Koné",email:"s.kone@mail.fr",score:76,modules:"10/13",niveau:"Intermédiaire",progression:77,lastDate:"2026-09-12"},
-        {nom:"Amine Bel",email:"a.bel@mail.fr",score:68,modules:"7/13",niveau:"Intermédiaire",progression:54,lastDate:"2026-09-10"},
-        {nom:"Chloé Rey",email:"c.rey@mail.fr",score:64,modules:"6/13",niveau:"Débutant",progression:46,lastDate:"2026-09-08"},
-        {nom:"Youssef N.",email:"y.nour@mail.fr",score:58,modules:"5/13",niveau:"Débutant",progression:38,lastDate:"2026-08-30"},
-        {nom:"Léa Fontaine",email:"l.font@mail.fr",score:88,modules:"12/13",niveau:"Avancé",progression:92,lastDate:"2026-09-15"},
-        {nom:"Thomas Petit",email:"t.petit@mail.fr",score:74,modules:"9/13",niveau:"Intermédiaire",progression:69,lastDate:"2026-09-09"}],
-      scoresParModule:[
-        {module:"Découverte",score:78},{module:"SPIN S",score:74},{module:"SPIN P",score:62},
-        {module:"SPIN I",score:65},{module:"SPIN N",score:70},{module:"Objections",score:58},
-        {module:"Closing",score:72},{module:"Négo",score:69},{module:"Pitch",score:75}]}
-  }
-};
-const DEMO_LOGIN={"marie@demo.fr":{token:"demo123",ref:"tok_marie_abc123"},"coach@demo.fr":{token:"demo456",ref:"tok_coach_xyz789"}};
+
 
 // ═══════════ BOOT ═══════════
 const urlParams=new URLSearchParams(window.location.search);
@@ -277,10 +246,10 @@ if(isEmbedded)document.body.classList.add('embedded');
 })();
 
 async function fetchByToken(token){
-  if(API_URL){const r=await fetch(API_URL+'?action=auth&token='+encodeURIComponent(token));const j=await r.json();if(j.error)throw new Error(j.error);return j}
-  await new Promise(r=>setTimeout(r,800));
-  const d=DEMO_TOKENS[token];if(!d)throw new Error('Token invalide ou expiré.');
-  return{role:d.role,nom:d.nom,data:d.data};
+  const r=await fetch(API_URL+'?action=auth&token='+encodeURIComponent(token));
+  const j=await r.json();
+  if(j.error)throw new Error(j.error);
+  return j;
 }
 function hideSplash(){document.getElementById('splashScreen').style.display='none'}
 function showManualLogin(){hideSplash();document.getElementById('loginScreen').style.display='flex'}
@@ -294,8 +263,8 @@ async function handleLogin(){
   btn.disabled=true;btn.textContent='Connexion…';errEl.textContent='';
   try{
     let ud;
-    if(API_URL){const r=await fetch(API_URL+'?action=login&email='+encodeURIComponent(email)+'&token='+encodeURIComponent(token));const j=await r.json();if(j.error)throw new Error(j.error);ud=j}
-    else{await new Promise(r=>setTimeout(r,600));const u=DEMO_LOGIN[email];if(!u||u.token!==token)throw new Error('Email ou token incorrect.');const d=DEMO_TOKENS[u.ref];ud={role:d.role,nom:d.nom,data:d.data}}
+    const r=await fetch(API_URL+'?action=login&email='+encodeURIComponent(email)+'&token='+encodeURIComponent(token));
+    const j=await r.json();if(j.error)throw new Error(j.error);ud=j;
     document.getElementById('loginScreen').style.display='none';showDashboard(ud);
   }catch(e){errEl.textContent=e.message||'Erreur.'}
   finally{btn.disabled=false;btn.textContent='Accéder au dashboard'}
