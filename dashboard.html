@@ -229,24 +229,44 @@ let chartInstances = [];   // for cleanup
 // ═══════════ BOOT ═══════════
 const urlParams=new URLSearchParams(window.location.search);
 const urlToken=urlParams.get('token');
+const urlEmail=urlParams.get('email');
 const isEmbedded=(window.self!==window.top);
 if(isEmbedded)document.body.classList.add('embedded');
 
 (async function boot(){
   if(urlToken){
+    // Mode formateur : token
     try{
       const ud=await fetchByToken(urlToken);hideSplash();showDashboard(ud);
     }catch(err){
-      document.getElementById('splashSpinner').style.display='none';
-      document.getElementById('splashMsg').style.display='none';
-      document.getElementById('splashError').textContent=err.message;
-      if(!isEmbedded)document.getElementById('splashFallback').style.display='inline-block';
+      showSplashError(err);
+    }
+  }else if(urlEmail){
+    // Mode apprenant : email Learnybox
+    try{
+      const ud=await fetchByEmail(urlEmail);hideSplash();showDashboard(ud);
+    }catch(err){
+      showSplashError(err);
     }
   }else{showManualLogin()}
 })();
 
+function showSplashError(err){
+  document.getElementById('splashSpinner').style.display='none';
+  document.getElementById('splashMsg').style.display='none';
+  document.getElementById('splashError').textContent=err.message;
+  if(!isEmbedded)document.getElementById('splashFallback').style.display='inline-block';
+}
+
 async function fetchByToken(token){
   const r=await fetch(API_URL+'?action=auth&token='+encodeURIComponent(token));
+  const j=await r.json();
+  if(j.error)throw new Error(j.error);
+  return j;
+}
+
+async function fetchByEmail(email){
+  const r=await fetch(API_URL+'?action=learner&email='+encodeURIComponent(email));
   const j=await r.json();
   if(j.error)throw new Error(j.error);
   return j;
